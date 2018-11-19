@@ -1,6 +1,6 @@
 {
   "name": "amqp-rpc",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Simple AMQP RPC client/server config",
   "main": "build/index.js",
   "scripts": {
@@ -40,5 +40,6 @@
     "@sindresorhus/is": "^0.13.0",
     "amqplib": "^0.5.2",
     "debug": "^4.1.0"
-  }
+  },
+  "types": "build/index.d.ts"
 }
