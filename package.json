@@ -7,7 +7,7 @@
     "prepare": "npm run build",
     "clean": "rimraf build",
     "build": "npm run clean && tsc",
-    "test": "NODE_ENV=test DEBUG=amqp-rpc* mocha --timeout 10000 --reporter spec --full-trace --colors --recursive --bail --exit $([ -z \"$npm_config_path\" ] && echo build/**/*.spec.js || echo $npm_config_path)",
+    "test": "NODE_ENV=test DEBUG=amqp-rpc* mocha --timeout 20000 --reporter spec --full-trace --colors --recursive --bail --exit $([ -z \"$npm_config_path\" ] && echo build/**/*.spec.js || echo $npm_config_path)",
     "mq": "docker run --name amqp-rpc-mq -d --rm -p 5672:5672 rabbitmq:management",
     "mq:stop": "docker stop amqp-rpc-mq",
     "lint": "tslint \"src/**/*.ts\" --project tsconfig.json",
