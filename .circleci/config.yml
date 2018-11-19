@@ -31,6 +31,8 @@ jobs:
             - .circleci/
             - build/
             - node_modules/
+            - Dockerfile
+            - docker-compose.test.yml
             - package.json
   test:
     working_directory: ~/repo
