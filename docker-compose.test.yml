@@ -1,0 +1,17 @@
+version: "3.4"
+services:
+  rpc:
+    build:
+      context: .
+      target: test
+    container_name: "rpc"
+    environment:
+      MQ_HOST: "mq:27017"
+    image: "amqp-rpc:test"
+    links:
+      - "mq"
+  mq:
+    container_name: "mq"
+    image: "rabbitmq:management"
+    ports:
+      - "5672:5672"

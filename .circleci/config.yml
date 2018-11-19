@@ -1,0 +1,80 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/repo
+    docker:
+      - image: node:10.12.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - dependency-cache-{{ checksum "yarn.lock" }}
+            - dependency-cache-
+      - run:
+          name: Install NPM dependencies
+          command: yarn
+      - save_cache:
+          key: dependency-cache-{{ checksum "yarn.lock" }}
+          paths:
+            - "node_modules"
+      - run:
+          name: Build
+          command: npm run build
+      - run:
+          name: Pack
+          command: .circleci/pack.sh
+      - store_artifacts:
+          path: ~/repo/package
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .circleci/
+            - build/
+            - node_modules/
+            - package.json
+  test:
+    working_directory: ~/repo
+    docker:
+      - image: docker/compose:1.22.0
+    steps:
+      - attach_workspace:
+          at: .
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Test
+          command: docker-compose -f docker-compose.test.yml up --build
+  deploy:
+    working_directory: ~/repo
+    docker:
+      - image: node:10.12.0
+    steps:
+      - attach_workspace:
+          at: .
+      - deploy:
+          name: Deploy to NPM
+          command: .circleci/deploy_to_npm.sh
+
+workflows:
+  version: 2
+  build_test_deploy:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /^v.*/
+      - test:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /^v.*/
+      - deploy:
+          context: npm_deployment
+          requires:
+            - test
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
