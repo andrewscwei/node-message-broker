@@ -12,4 +12,7 @@ export default function factory(url?: string, options?: AMQPConnectionManagerOpt
 
 export { default as RPCClient } from './core/RPCClient';
 export { default as RPCServer } from './core/RPCServer';
+export * from './enums';
+export * from './types';
+export * from './utils';
 export { AMQPConnectionManager, AMQPConnectionManagerOptions };

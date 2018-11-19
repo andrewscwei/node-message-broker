@@ -1,6 +1,6 @@
 {
   "name": "@sybl/amqp-rpc",
-  "version": "0.3.2",
+  "version": "0.1.0",
   "description": "Simple AMQP RPC client/server config",
   "main": "build/index.js",
   "private": true,

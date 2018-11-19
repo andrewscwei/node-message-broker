@@ -1,8 +1,9 @@
 import { ConsumeMessage } from 'amqplib';
 import { EventEmitter } from 'events';
+import { AMQPEventType } from '../enums';
 import { isValidRPCPayload, RPCPayload } from '../types';
 import randomCorrelationId from '../utils/randomCorrelationId';
-import AMQPConnectionManager, { AMQPEventType, REPLY_QUEUE } from './AMQPConnectionManager';
+import AMQPConnectionManager, { REPLY_QUEUE } from './AMQPConnectionManager';
 
 const debug = require('debug')('amqp-rpc:client');
 

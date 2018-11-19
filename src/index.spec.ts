@@ -2,8 +2,9 @@ import is from '@sindresorhus/is';
 import assert from 'assert';
 import { describe, it } from 'mocha';
 import { RPCClient } from '.';
-import AMQPConnectionManager, { AMQPEventType } from './core/AMQPConnectionManager';
+import AMQPConnectionManager from './core/AMQPConnectionManager';
 import RPCServer from './core/RPCServer';
+import { AMQPEventType } from './enums';
 import { RPCPayload } from './types';
 
 describe('amqp-rpc', () => {

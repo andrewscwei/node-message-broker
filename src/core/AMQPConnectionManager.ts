@@ -1,6 +1,7 @@
 import is from '@sindresorhus/is';
 import amqplib, { Connection } from 'amqplib';
 import { EventEmitter } from 'events';
+import { AMQPEventType } from '../enums';
 
 const debug = require('debug')('amqp-rpc');
 
@@ -8,35 +9,6 @@ const debug = require('debug')('amqp-rpc');
  * Default pseudo-queue for RPC clients to request from and reply to.
  */
 export const REPLY_QUEUE: string = 'amq.rabbitmq.reply-to';
-
-export enum AMQPEventType {
-  /**
-   * A conection to the message queue broker server is successfully established.
-   */
-  CONNECT = 'connect',
-
-  /**
-   * A connection is terminated from the message queue broker server.
-   */
-  DISCONNECT = 'disconnect',
-
-  /**
-   * A connection attempt is blocked by the message queue broker server.
-   */
-  BLOCKED = 'blocked',
-
-  /**
-   * A blocked connection attempt is unblocked by the message queue broker
-   * server.
-   */
-  UNBLOCKED = 'unblocked',
-
-  /**
-   * An error has occurred while connecting to or during the connection of the
-   * message queue broker server.
-   */
-  ERROR = 'error',
-}
 
 export interface AMQPConnectionManagerOptions {
   /**
