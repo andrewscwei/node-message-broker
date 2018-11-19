@@ -38,10 +38,6 @@ export enum AMQPEventType {
   ERROR = 'error',
 }
 
-export type AMQPConnectionPayload = Readonly<{
-  [key: string]: any;
-}>;
-
 export interface AMQPConnectionManagerOptions {
   /**
    * Time in seconds to wait before attempting to auto-reconnect whenever the
@@ -52,6 +48,7 @@ export interface AMQPConnectionManagerOptions {
 
 export default class AMQPConnectionManager extends EventEmitter {
   protected connection?: Connection;
+  protected isConnecting: boolean = false;
   private heartbeat: number = 3;
   private url: string = 'amqp://localhost:5672';
 
@@ -76,18 +73,6 @@ export default class AMQPConnectionManager extends EventEmitter {
   }
 
   /**
-   * Validates that a given value is a valid payload.
-   *
-   * @param payload
-   *
-   * @returns `true` if valid, `false` otherwise.
-   */
-  isValidPayload(payload: any): payload is AMQPConnectionPayload {
-    if (!is.plainObject(payload)) return false;
-    return true;
-  }
-
-  /**
    * Checks if this AMQPConnectionManager instance is connected to the MQ
    * broker.
    *
@@ -102,15 +87,29 @@ export default class AMQPConnectionManager extends EventEmitter {
    *
    * @returns The connection instance.
    */
-  private async connect(): Promise<Connection> {
+  async connect(): Promise<Connection> {
     if (this.connection) return this.connection;
 
+    if (this.isConnecting) {
+      await new Promise((resolve, reject) => {
+        this.once(AMQPEventType.CONNECT, () => {
+          resolve();
+        });
+      });
+
+      return this.connect();
+    }
+
     debug(`Connecting to ${this.url}...`);
+
+    this.isConnecting = true;
 
     try {
       this.connection = await amqplib.connect(this.url);
 
       debug('Connected successfully');
+
+      this.isConnecting = false;
 
       this.emit(AMQPEventType.CONNECT);
 
@@ -124,6 +123,8 @@ export default class AMQPConnectionManager extends EventEmitter {
     catch (err) {
       debug(`Unable to connect to ${this.url}, retrying in ${this.heartbeat}s`);
 
+      this.isConnecting = false;
+
       await this.pulse();
       return this.connect();
     }
@@ -132,7 +133,22 @@ export default class AMQPConnectionManager extends EventEmitter {
   /**
    * Disconnect from the message queue server (if a connection already exists).
    */
-  private async disconnect() {
+  async disconnect() {
+    if (this.connection) {
+      this.connection.close();
+
+      await new Promise((resolve, reject) => {
+        this.once(AMQPEventType.DISCONNECT, () => {
+          resolve();
+        });
+      });
+    }
+  }
+
+  /**
+   * Cleans up the connection instance.
+   */
+  private async onDisconnect() {
     if (this.connection) {
       this.connection.removeAllListeners();
 
@@ -191,7 +207,7 @@ export default class AMQPConnectionManager extends EventEmitter {
 
     this.emit(AMQPEventType.ERROR);
 
-    this.disconnect().then(() => this.connect());
+    this.onDisconnect().then(() => this.connect());
   }
 
   /**
@@ -202,6 +218,6 @@ export default class AMQPConnectionManager extends EventEmitter {
   private onConnectionClose = (error: Error) => {
     debug(`MQ connection closed: ${error}`);
 
-    this.disconnect().then(() => this.connect());
+    this.onDisconnect().then(() => this.connect());
   }
 }
