@@ -5,13 +5,15 @@ services:
       context: .
       target: test
     container_name: "rpc"
+    depends_on:
+      - "mq"
     environment:
-      MQ_HOST: "mq:27017"
+      MQ_HOST: "mq:5672"
     image: "amqp-rpc:test"
     links:
       - "mq"
   mq:
     container_name: "mq"
-    image: "rabbitmq:management"
+    image: "rabbitmq:3.7.8"
     ports:
       - "5672:5672"

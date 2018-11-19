@@ -88,6 +88,16 @@ export default class AMQPConnectionManager extends EventEmitter {
   }
 
   /**
+   * Checks if this AMQPConnectionManager instance is connected to the MQ
+   * broker.
+   *
+   * @returns `true` if connected, `false` otherwise.
+   */
+  isConnected(): boolean {
+    return !is.nullOrUndefined(this.connection);
+  }
+
+  /**
    * Connect to the message queue server.
    *
    * @returns The connection instance.

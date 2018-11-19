@@ -44,16 +44,6 @@ jobs:
       - run:
           name: Test
           command: docker-compose -f docker-compose.test.yml up --build
-  deploy:
-    working_directory: ~/repo
-    docker:
-      - image: node:10.12.0
-    steps:
-      - attach_workspace:
-          at: .
-      - deploy:
-          name: Deploy to NPM
-          command: .circleci/deploy_to_npm.sh
 
 workflows:
   version: 2
@@ -67,14 +57,5 @@ workflows:
           requires:
             - build
           filters:
-            tags:
-              only: /^v.*/
-      - deploy:
-          context: npm_deployment
-          requires:
-            - test
-          filters:
-            branches:
-              ignore: /.*/
             tags:
               only: /^v.*/

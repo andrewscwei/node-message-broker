@@ -24,7 +24,7 @@ FROM build as test
 
 WORKDIR /var/app
 
-RUN sed -i '/"src\/tests\/\*\*\/\*"/d' ./tsconfig.json
+RUN sed -i '/"\*\*\/\*\.spec\.ts"/d' ./tsconfig.json
+RUN npm run build
 
 CMD npm run test
-
