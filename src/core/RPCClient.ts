@@ -2,7 +2,7 @@ import { ConsumeMessage } from 'amqplib';
 import { EventEmitter } from 'events';
 import uuid from 'uuid';
 import { AMQPEventType } from '../enums';
-import { isValidRPCPayload, RPCPayload } from '../types';
+import { isValidMessagePayload, MessagePayload } from '../types';
 import AMQPConnectionManager, { REPLY_QUEUE } from './AMQPConnectionManager';
 
 const debug = require('debug')('broker:rpc-client');
@@ -16,7 +16,7 @@ export default class RPCClient extends AMQPConnectionManager {
    *
    * @returns The response from the consumer.
    */
-  async request(queue: string, payload: RPCPayload): Promise<object | Buffer> {
+  async request(queue: string, payload: MessagePayload): Promise<object | Buffer> {
     if (!this.connection) {
       return new Promise((resolve, reject) => {
         this.once(AMQPEventType.CONNECT, () => {
@@ -27,7 +27,7 @@ export default class RPCClient extends AMQPConnectionManager {
       });
     }
 
-    if (!isValidRPCPayload(payload)) {
+    if (!isValidMessagePayload(payload)) {
       throw new Error('Invalid payload provided, it must be a plain object');
     }
 

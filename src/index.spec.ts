@@ -5,7 +5,7 @@ import { RPCClient } from '.';
 import AMQPConnectionManager from './core/AMQPConnectionManager';
 import RPCServer from './core/RPCServer';
 import { AMQPEventType } from './enums';
-import { RPCPayload } from './types';
+import { MessagePayload } from './types';
 
 describe('broker', () => {
   it('can create a new AMQPConnectionManager instance that auto connects to a MQ server', async () => {
@@ -59,7 +59,7 @@ describe('broker', () => {
     const client = new RPCClient(process.env.MQ_HOST);
     const server = new RPCServer(process.env.MQ_HOST);
 
-    server.reply('test-queue', async (payload?: RPCPayload) => {
+    server.reply('test-queue', async (payload?: MessagePayload) => {
       if (is.nullOrUndefined(payload)) throw new Error('No payload provided');
       assert(payload.foo === 'foo');
 

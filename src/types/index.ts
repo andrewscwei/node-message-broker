@@ -1,6 +1,6 @@
 import is from '@sindresorhus/is';
 
-export type RPCPayload = Readonly<{
+export type MessagePayload = Readonly<{
   [key: string]: any;
 }>;
 
@@ -11,7 +11,7 @@ export type RPCPayload = Readonly<{
  *
  * @returns `true` if valid, `false` otherwise.
  */
-export function isValidRPCPayload(payload: any): payload is RPCPayload {
+export function isValidMessagePayload(payload: any): payload is MessagePayload {
   if (!is.plainObject(payload)) return false;
   return true;
 }

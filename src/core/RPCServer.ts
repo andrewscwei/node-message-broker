@@ -1,5 +1,5 @@
 import { AMQPEventType } from '../enums';
-import { isValidRPCPayload, RPCPayload } from '../types';
+import { isValidMessagePayload, MessagePayload } from '../types';
 import AMQPConnectionManager from './AMQPConnectionManager';
 
 const debug = require('debug')('broker:rpc-server');
@@ -12,7 +12,7 @@ export default class RPCServer extends AMQPConnectionManager {
    * @param generatePayload - Async function for generating a response payload
    *                          to the publisher.
    */
-  async reply(queue: string, processPayload: (payload?: RPCPayload) => Promise<RPCPayload>): Promise<void> {
+  async reply(queue: string, processPayload: (payload?: MessagePayload) => Promise<MessagePayload>): Promise<void> {
     if (!this.connection) {
       this.once(AMQPEventType.CONNECT, () => {
         this.reply(queue, processPayload);
@@ -31,14 +31,14 @@ export default class RPCServer extends AMQPConnectionManager {
       if (message) {
         debug('Received message from publisher');
 
-        const correlationId = message.properties.correlationId;
+        const corrId = message.properties.correlationId;
         const payload = JSON.parse(message.content as any);
 
         if (message.properties.contentType !== 'application/json') {
           throw new Error('The message content type must be of JSON format');
         }
 
-        if (!isValidRPCPayload(payload)) {
+        if (!isValidMessagePayload(payload)) {
           throw new Error('The message content type must be of JSON format');
         }
 
@@ -50,7 +50,7 @@ export default class RPCServer extends AMQPConnectionManager {
             debug('Sending response to publisher...');
 
             channel.sendToQueue(message.properties.replyTo, Buffer.from(JSON.stringify(out)), {
-              correlationId,
+              correlationId: corrId,
               contentType: 'application/json',
             });
 
