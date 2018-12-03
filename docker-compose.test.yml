@@ -9,7 +9,7 @@ services:
       - "mq"
     environment:
       MQ_HOST: "mq:5672"
-    image: "amqp-rpc:test"
+    image: "rpc:test"
     links:
       - "mq"
   mq:

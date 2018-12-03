@@ -2,7 +2,7 @@ import { AMQPEventType } from '../enums';
 import { isValidRPCPayload, RPCPayload } from '../types';
 import AMQPConnectionManager from './AMQPConnectionManager';
 
-const debug = require('debug')('amqp-rpc:server');
+const debug = require('debug')('rpc:server');
 
 export default class RPCServer extends AMQPConnectionManager {
   /**

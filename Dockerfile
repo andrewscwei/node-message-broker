@@ -10,9 +10,9 @@ ADD package.json /var/app/
 ADD src /var/app/src
 ADD tsconfig.json /var/app/
 ADD tslint.json /var/app/
-ADD yarn.lock /var/app/
+ADD package-lock.json /var/app/
 
-RUN yarn
+RUN npm install
 RUN npm run build
 
 

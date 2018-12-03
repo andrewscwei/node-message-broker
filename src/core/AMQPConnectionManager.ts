@@ -3,7 +3,7 @@ import amqplib, { Connection } from 'amqplib';
 import { EventEmitter } from 'events';
 import { AMQPEventType } from '../enums';
 
-const debug = require('debug')('amqp-rpc');
+const debug = require('debug')('rpc');
 
 /**
  * Default pseudo-queue for RPC clients to request from and reply to.

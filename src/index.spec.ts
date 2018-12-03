@@ -7,7 +7,7 @@ import RPCServer from './core/RPCServer';
 import { AMQPEventType } from './enums';
 import { RPCPayload } from './types';
 
-describe('amqp-rpc', () => {
+describe('rpc', () => {
   it('can create a new AMQPConnectionManager instance that auto connects to a MQ server', async () => {
     const manager = new AMQPConnectionManager(process.env.MQ_HOST);
 

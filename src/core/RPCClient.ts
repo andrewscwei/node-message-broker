@@ -5,7 +5,7 @@ import { isValidRPCPayload, RPCPayload } from '../types';
 import randomCorrelationId from '../utils/randomCorrelationId';
 import AMQPConnectionManager, { REPLY_QUEUE } from './AMQPConnectionManager';
 
-const debug = require('debug')('amqp-rpc:client');
+const debug = require('debug')('rpc:client');
 
 export default class RPCClient extends AMQPConnectionManager {
   /**
