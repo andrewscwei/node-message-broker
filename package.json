@@ -1,7 +1,7 @@
 {
   "name": "@sybl/broker",
-  "version": "0.2.1",
-  "description": "RPC factory for Sybl core",
+  "version": "0.2.2",
+  "description": "Sybl core message broker",
   "main": "build/index.js",
   "private": true,
   "scripts": {
