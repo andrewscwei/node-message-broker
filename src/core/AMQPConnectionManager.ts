@@ -6,11 +6,6 @@ import { AMQPEventType } from '../enums';
 
 const debug = require('debug')('broker');
 
-/**
- * Default pseudo-queue for RPC clients to request from and reply to.
- */
-export const REPLY_QUEUE: string = 'amq.rabbitmq.reply-to';
-
 export interface AMQPConnectionManagerOptions {
   /**
    * Time in seconds to wait before attempting to auto-reconnect whenever the

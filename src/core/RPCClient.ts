@@ -1,9 +1,7 @@
-import { ConsumeMessage } from 'amqplib';
-import { EventEmitter } from 'events';
 import uuid from 'uuid';
-import { AMQPEventType } from '../enums';
+import { AMQPEventType, RPCQueueType } from '../enums';
 import { isValidMessagePayload, MessagePayload } from '../types';
-import AMQPConnectionManager, { REPLY_QUEUE } from './AMQPConnectionManager';
+import AMQPConnectionManager from './AMQPConnectionManager';
 
 const debug = require('debug')('broker:rpc-client');
 
@@ -17,6 +15,7 @@ export default class RPCClient extends AMQPConnectionManager {
    * @returns The response from the consumer.
    */
   async request(queue: string, payload: MessagePayload): Promise<object | Buffer> {
+    // Ensure there is a connection.
     if (!this.connection) {
       return new Promise((resolve, reject) => {
         this.once(AMQPEventType.CONNECT, () => {
@@ -27,40 +26,33 @@ export default class RPCClient extends AMQPConnectionManager {
       });
     }
 
+    // Ensure message payload is valid.
     if (!isValidMessagePayload(payload)) {
-      throw new Error('Invalid payload provided, it must be a plain object');
+      throw new Error('Invalid message payload provided, it must be a plain object');
     }
 
     debug(`Publishing to queue "${queue}"...`);
 
     const channel = await this.connection.createChannel();
-    const eventEmitter = new EventEmitter();
     const corrId = uuid();
-
-    channel.consume(REPLY_QUEUE, message => {
-      if (message) {
-        eventEmitter.emit(message.properties.correlationId, message);
-      }
-      else {
-        throw new Error('No message in reply');
-      }
-    }, {
-      noAck: true,
-    });
 
     await channel.assertQueue(queue);
 
     return new Promise((resolve, reject) => {
+      channel.consume(RPCQueueType.DEFAULT_REPLY_TO, message => {
+        if (!message || message.properties.correlationId !== corrId) return;
+
+        debug(`Received response in reply queue for correlation ID ${corrId}`);
+
+        resolve(JSON.parse(message.content as any));
+      }, {
+        noAck: true,
+      });
+
       channel.sendToQueue(queue, Buffer.from(JSON.stringify(payload)), {
         correlationId: corrId,
         contentType: 'application/json',
-        replyTo: REPLY_QUEUE,
-      });
-
-      eventEmitter.once(corrId, (message: ConsumeMessage) => {
-        debug('Received response in reply queue');
-
-        resolve(JSON.parse(message.content as any));
+        replyTo: RPCQueueType.DEFAULT_REPLY_TO,
       });
     });
   }

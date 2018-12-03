@@ -4,7 +4,7 @@ import { describe, it } from 'mocha';
 import { RPCClient } from '.';
 import AMQPConnectionManager from './core/AMQPConnectionManager';
 import RPCServer from './core/RPCServer';
-import { AMQPEventType, RPCQueueType } from './enums';
+import { AMQPEventType } from './enums';
 import { MessagePayload } from './types';
 
 describe('broker', () => {
@@ -55,11 +55,11 @@ describe('broker', () => {
     assert(server.isConnected());
   });
 
-  it('can pub/sub', async () => {
+  it('can pub/sub via RPC', async () => {
     const client = new RPCClient(process.env.MQ_HOST);
     const server = new RPCServer(process.env.MQ_HOST);
 
-    server.reply(RPCQueueType.DEFAULT, async (payload?: MessagePayload) => {
+    server.reply('test-queue', async (payload?: MessagePayload) => {
       if (is.nullOrUndefined(payload)) throw new Error('No payload provided');
       assert(payload.foo === 'foo');
 
@@ -68,7 +68,7 @@ describe('broker', () => {
       };
     });
 
-    const res: any = await client.request(RPCQueueType.DEFAULT, { foo: 'foo' });
+    const res: any = await client.request('test-queue', { foo: 'foo' });
 
     assert(res.foo === 'bar');
   });
