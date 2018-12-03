@@ -15,7 +15,7 @@ export interface AMQPConnectionManagerOptions {
   heartbeat?: number;
 }
 
-export interface AMQPConnectionManagerSendOptions {
+export interface AMQPConnectionManagerSendToQueueOptions {
   /**
    * Indicates the name of the queue of which the publisher is expecting a
    * reply. Provide the name of the queue or simply set this to `true` to use
@@ -33,7 +33,7 @@ export interface AMQPConnectionManagerSendOptions {
   durable?: boolean;
 }
 
-export interface AMQPConnectionManagerReceiveOptions {
+export interface AMQPConnectionManagerReceiveFromQueueOptions {
   /**
    * Indicates the name of the queue of which the publisher is expecting a
    * reply. Provide the name of the queue or simply set this to `true` to use
@@ -59,6 +59,38 @@ export interface AMQPConnectionManagerReceiveOptions {
    * before any acknowledgement was sent.
    */
   prefetch?: number;
+}
+
+export interface AMQPConnectionManagerBroadcastOptions {
+  /**
+   * Indicates whether the message should be preserved in the case that the
+   * publisher dies. If this is `true`, the queue which the message is sent to
+   * will be marked as durable.
+   */
+  durable?: boolean;
+
+  /**
+   * Indicates the routing key of the publish. If left as '' or default, the
+   * message will be published to a `fanout` exchange. Otherwise if a routing
+   * key is provided, the message will be published to a `direct` exchange.
+   */
+  routingKey?: string;
+}
+
+export interface AMQPConnectionManagerReceiveOptions {
+  /**
+   * Indicates whether the message should be preserved in the case that the
+   * publisher dies. If this is `true`, the queue which the message is sent to
+   * will be marked as durable.
+   */
+  durable?: boolean;
+
+  /**
+   * Indicates the routing key of the publish. If left as '' or default, the
+   * message will be published to a `fanout` exchange. Otherwise if a routing
+   * key is provided, the message will be published to a `direct` exchange.
+   */
+  routingKeys?: string | string[];
 }
 
 export default class AMQPConnectionManager extends EventEmitter {
@@ -163,60 +195,65 @@ export default class AMQPConnectionManager extends EventEmitter {
     }
   }
 
-  async broadcast(exchange: string, payload: MessagePayload, { durable = true } = {}): Promise<void> {
+  /**
+   * Broadcasts a message to all consumers listening on the specified exchange.
+   *
+   * @param exchange - Name of the exchange.
+   * @param payload
+   * @param param2
+   */
+  async broadcast(exchange: string, payload: MessagePayload, { durable = true, routingKey = '' }: AMQPConnectionManagerBroadcastOptions = {}): Promise<void> {
     // Ensure there is a connection.
     if (!this.connection) {
       return new Promise<void>((resolve, reject) => {
-        this.once(AMQPEventType.CONNECT, () => {
-          this.broadcast(exchange, payload)
-            .then(() => resolve())
-            .catch(error => reject(error));
-        });
+        this.once(AMQPEventType.CONNECT, () => this.broadcast(exchange, payload).then(() => resolve()));
       });
     }
 
     // Ensure message payload is valid.
-    if (!isValidMessagePayload(payload)) {
-      throw new Error('Invalid message payload provided, it must be a plain object');
-    }
+    if (!isValidMessagePayload(payload)) throw new Error('Invalid message payload provided, it must be a plain object');
 
-    const channel = await this.connection.createChannel().catch(error => {
-      throw error;
-    });
+    const channel = await this.connection.createChannel();
 
-    await channel.assertExchange(exchange, 'fanout', { durable }).catch(error => {
-      throw error;
-    });
+    await channel.assertExchange(exchange, routingKey === '' ? 'fanout' : 'direct', { durable });
 
     debug(`Broadcasting to exchange "${exchange}"...`);
 
-    channel.publish(exchange, '', Buffer.from(JSON.stringify(payload)), {
+    channel.publish(exchange, routingKey, Buffer.from(JSON.stringify(payload)), {
       contentType: 'application/json',
     });
 
     await channel.close();
   }
 
-  async receive(exchange: string, handler: (payload?: MessagePayload) => Promise<MessagePayload | void>, { durable = true } = {}) {
+  /**
+   *
+   * @param exchange
+   * @param handler
+   * @param param2
+   */
+  async receive(exchange: string, handler: (routingKey: string, payload?: MessagePayload) => Promise<MessagePayload | void>, { durable = true, routingKeys = '' }: AMQPConnectionManagerReceiveOptions = {}) {
     // Ensure there is an active connection.
     if (!this.connection) {
       return new Promise<void>((resolve, reject) => {
-        this.once(AMQPEventType.CONNECT, () => {
-          this.receive(exchange, handler, { durable })
-            .then(() => resolve())
-            .catch(error => reject(error));
-        });
+        this.once(AMQPEventType.CONNECT, () => this.receive(exchange, handler, { durable }).then(() => resolve()));
       });
     }
 
-    const channel = await this.connection.createChannel().catch(error => {
-      throw error;
-    });
+    const channel = await this.connection.createChannel();
 
-    await channel.assertExchange(exchange, 'fanout', { durable });
+    await channel.assertExchange(exchange, routingKeys === '' ? 'fanout' : 'direct', { durable });
 
     const { queue } = await channel.assertQueue('', { exclusive: true });
-    await channel.bindQueue(queue, exchange, '');
+
+    if (is.string(routingKeys)) {
+      await channel.bindQueue(queue, exchange, routingKeys);
+    }
+    else {
+      for (const routingKey of routingKeys) {
+        await channel.bindQueue(queue, exchange, routingKey);
+      }
+    }
 
     debug(`Listening for exchange "${exchange}"...`);
 
@@ -238,46 +275,36 @@ export default class AMQPConnectionManager extends EventEmitter {
         throw new Error('The message content type must be of JSON format');
       }
 
-      handler(payload)
-        .then(out => {
-
-        })
-        .catch(error => {
-          throw error;
-        });
+      handler(message.fields.routingKey, payload);
     }, {
       noAck: true,
-    }).catch(error => {
-      throw error;
     });
   }
 
-  async sendToQueue(queue: string, payload: MessagePayload, { durable = true, replyTo = false }: AMQPConnectionManagerSendOptions = {}): Promise<void | MessagePayload> {
+  /**
+   * Sends a message to a specified queue.
+   *
+   * @param queue - Name of the queue.
+   * @param payload - Message payload.
+   * @param options - @see AMQPConnectionManagerSendToQueueOptions
+   *
+   * @returns A message payload from the consumer if this operation expects a
+   *          reply, `void` otherwise.
+   */
+  async sendToQueue(queue: string, payload: MessagePayload, { durable = true, replyTo = false }: AMQPConnectionManagerSendToQueueOptions = {}): Promise<void | MessagePayload> {
     // Ensure there is a connection.
     if (!this.connection) {
       return new Promise((resolve, reject) => {
-        this.once(AMQPEventType.CONNECT, () => {
-          this.sendToQueue(queue, payload, { durable, replyTo })
-            .then(message => resolve(message || undefined))
-            .catch(error => reject(error));
-        });
+        this.once(AMQPEventType.CONNECT, () => this.sendToQueue(queue, payload, { durable, replyTo }).then(message => resolve(message || undefined)));
       });
     }
 
     // Ensure message payload is valid.
-    if (!isValidMessagePayload(payload)) {
-      throw new Error('Invalid message payload provided, it must be a plain object');
-    }
+    if (!isValidMessagePayload(payload)) throw new Error('Invalid message payload provided, it must be a plain object');
 
     const corrId = uuid();
-
-    const channel = await this.connection.createChannel().catch(error => {
-      throw error;
-    });
-
-    const { queue: q } = await channel.assertQueue(queue, { durable }).catch(error => {
-      throw error;
-    });
+    const channel = await this.connection.createChannel();
+    const { queue: q } = await channel.assertQueue(queue, { durable });
 
     debug(`Sending to queue "${q}"...`);
 
@@ -302,33 +329,31 @@ export default class AMQPConnectionManager extends EventEmitter {
       channel.sendToQueue(q, Buffer.from(JSON.stringify(payload)), {
         correlationId: replyTo === false ? undefined : corrId,
         contentType: 'application/json',
-        replyTo: replyTo === false ? undefined : RPCQueueType.DEFAULT_REPLY_TO,
+        replyTo: replyTo === false ? undefined : (replyTo === true ? RPCQueueType.DEFAULT_REPLY_TO : replyTo),
         deliveryMode: true,
       });
     });
   }
 
-  async receiveFromQueue(queue: string, handler: (payload?: MessagePayload) => Promise<MessagePayload | void>, { ack = true, durable = true, prefetch = 1, replyTo = false }: AMQPConnectionManagerReceiveOptions = {}): Promise<void> {
+  /**
+   * Receives a message from a specified queue.
+   *
+   * @param queue - Name of the queue.
+   * @param handler - Handler invoked when the message is received.
+   * @param options - @see AMQPConnectionManagerReceiveFromQueueOptions
+   */
+  async receiveFromQueue(queue: string, handler: (payload?: MessagePayload) => Promise<MessagePayload | void>, { ack = true, durable = true, prefetch = 1, replyTo = false }: AMQPConnectionManagerReceiveFromQueueOptions = {}): Promise<void> {
     // Ensure there is an active connection.
     if (!this.connection) {
       return new Promise<void>((resolve, reject) => {
-        this.once(AMQPEventType.CONNECT, () => {
-          this.receiveFromQueue(queue, handler, { durable, prefetch, replyTo })
-            .then(() => resolve())
-            .catch(error => reject(error));
-        });
+        this.once(AMQPEventType.CONNECT, () => this.receiveFromQueue(queue, handler, { durable, prefetch, replyTo }).then(() => resolve()));
       });
     }
 
     debug(`Listening for queue "${queue}"...`);
 
-    const channel = await this.connection.createChannel().catch(error => {
-      throw error;
-    });
-
-    const { queue: q } = await channel.assertQueue(queue, { durable }).catch(error => {
-      throw error;
-    });
+    const channel = await this.connection.createChannel();
+    const { queue: q } = await channel.assertQueue(queue, { durable });
 
     channel.prefetch(prefetch);
 
@@ -374,8 +399,6 @@ export default class AMQPConnectionManager extends EventEmitter {
         });
     }, {
       noAck: !ack,
-    }).catch(error => {
-      throw error;
     });
   }
 
