@@ -2,7 +2,8 @@ import is from '@sindresorhus/is';
 import amqplib, { Connection } from 'amqplib';
 import { EventEmitter } from 'events';
 import uuid from 'uuid/v1';
-import { AMQPEventType } from '../enums';
+import { AMQPEventType, RPCQueueType } from '../enums';
+import { isValidMessagePayload, MessagePayload } from '../types';
 
 const debug = require('debug')('broker');
 
@@ -12,6 +13,62 @@ export interface AMQPConnectionManagerOptions {
    * connection is lost. Specify 0 to never auto-reconnect.
    */
   heartbeat?: number;
+}
+
+export interface AMQPConnectionManagerSendOptions {
+  /**
+   * Name of the queue to send the message to.
+   */
+  queue: string;
+
+  /**
+   * Indicates the name of the queue of which the publisher is expecting a
+   * reply. Provide the name of the queue or simply set this to `true` to use
+   * the default reply-to queue with a correlation ID. If set to `false`, no
+   * reply is expected from the consumer.
+   */
+  replyTo?: string | boolean;
+
+  /**
+   * Indicates whether the message should be preserved in the case that the
+   * publisher dies. If this is `true`, the queue which the message is sent to
+   * will be marked as durable and the message that is sent will be marked as
+   * persistent, i.e. setting `deliveryMode` to `true`.
+   */
+  durable?: boolean;
+}
+
+export interface AMQPConnectionManagerReceiveOptions {
+  /**
+   * Name of the queue to await for message consumption.
+   */
+  queue: string;
+
+  /**
+   * Indicates the name of the queue of which the publisher is expecting a
+   * reply. Provide the name of the queue or simply set this to `true` to use
+   * the default reply-to queue with a correlation ID. If set to `false`, no
+   * reply is expected from the consumer.
+   */
+  replyTo?: string | boolean;
+
+  /**
+   * Indicates whether the sent message should be acknowledged when consumed.
+   */
+  ack?: boolean;
+
+  /**
+   * Indicates whether the message should be preserved in the case that the
+   * publisher dies. If this is `true`, the queue which the message is sent to
+   * will be marked as durable.
+   */
+  durable?: boolean;
+
+  /**
+   * Determines how many messages this instance can receive on the same queue
+   * before any acknowledgement was sent.
+   */
+  prefetch?: number;
 }
 
 export default class AMQPConnectionManager extends EventEmitter {
@@ -114,6 +171,137 @@ export default class AMQPConnectionManager extends EventEmitter {
         });
       });
     }
+  }
+
+  async send(payload: MessagePayload, { queue, durable = true, replyTo = false }: AMQPConnectionManagerSendOptions): Promise<void | MessagePayload> {
+    // Ensure there is a connection.
+    if (!this.connection) {
+      return new Promise((resolve, reject) => {
+        this.once(AMQPEventType.CONNECT, () => {
+          this.send(payload, { queue, durable, replyTo })
+            .then(message => resolve(message || undefined))
+            .catch(error => reject(error));
+        });
+      });
+    }
+
+    // Ensure message payload is valid.
+    if (!isValidMessagePayload(payload)) {
+      throw new Error('Invalid message payload provided, it must be a plain object');
+    }
+
+
+    const corrId = uuid();
+
+    const channel = await this.connection.createChannel().catch(error => {
+      throw error;
+    });
+
+    const { queue: q } = await channel.assertQueue(queue, { durable }).catch(error => {
+      throw error;
+    });
+
+    debug(`Sending to queue "${q}"...`);
+
+    return new Promise((resolve, reject) => {
+      if (replyTo === false) {
+        channel.close().then(() => resolve());
+      }
+      else {
+        const replyQueue = replyTo === true ? RPCQueueType.DEFAULT_REPLY_TO : replyTo;
+
+        channel.consume(replyQueue, message => {
+          if (!message || (message.properties.correlationId !== corrId)) return;
+
+          debug(`Received response in reply queue for correlation ID ${corrId}`);
+
+          channel.close().then(() => resolve(JSON.parse(message.content as any)));
+        }, {
+          noAck: true,
+        });
+      }
+
+      channel.sendToQueue(q, Buffer.from(JSON.stringify(payload)), {
+        correlationId: replyTo === false ? undefined : corrId,
+        contentType: 'application/json',
+        replyTo: replyTo === false ? undefined : RPCQueueType.DEFAULT_REPLY_TO,
+        deliveryMode: true,
+      });
+    });
+  }
+
+  async receive(handler: (payload?: MessagePayload) => Promise<MessagePayload | void>, { queue, ack = true, durable = true, prefetch = 1, replyTo = false }: AMQPConnectionManagerReceiveOptions): Promise<void> {
+    // Ensure there is an active connection.
+    if (!this.connection) {
+      return new Promise<void>((resolve, reject) => {
+        this.once(AMQPEventType.CONNECT, () => {
+          this.receive(handler, { queue, durable, prefetch, replyTo })
+            .then(() => resolve())
+            .catch(error => reject(error));
+        });
+      });
+    }
+
+    debug(`Listening for queue "${queue}"...`);
+
+    const channel = await this.connection.createChannel().catch(error => {
+      throw error;
+    });
+
+    const { queue: q } = await channel.assertQueue(queue, { durable }).catch(error => {
+      throw error;
+    });
+
+    channel.prefetch(prefetch);
+
+    await channel.consume(q, message => {
+      if (!message) {
+        debug('No message received');
+        return;
+      }
+
+      debug('Received message from publisher');
+
+      const payload = JSON.parse(message.content as any);
+
+      if (message.properties.contentType !== 'application/json') {
+        throw new Error('The message content type must be of JSON format');
+      }
+
+      if (!isValidMessagePayload(payload)) {
+        throw new Error('The message content type must be of JSON format');
+      }
+
+      // Generate the payload. Note that the payload is either a JSON object
+      // or a buffer. Handle both and let the publisher know which format it
+      // is.
+      handler(payload)
+        .then(out => {
+          if (message.properties.replyTo) {
+            debug('Sending response to publisher...');
+
+            channel.sendToQueue(message.properties.replyTo, Buffer.from(JSON.stringify(out || {})), {
+              correlationId: message.properties.correlationId,
+              contentType: 'application/json',
+            });
+          }
+
+          if (ack) {
+            channel.ack(message);
+          }
+        })
+        .catch(err => {
+          debug(`Error occured while handling message: ${err}`);
+
+          if (ack) {
+            channel.nack(message, false, false);
+          }
+        });
+    }, {
+      noAck: !ack,
+    }).catch(error => {
+      throw error;
+    });
   }
 
   /**
