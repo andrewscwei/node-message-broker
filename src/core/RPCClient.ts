@@ -13,6 +13,6 @@ export default class RPCClient extends AMQPConnectionManager {
    * @returns The response from the consumer.
    */
   async request(queue: string, payload: MessagePayload): Promise<void | MessagePayload> {
-    return this.send(payload, { queue, replyTo: true });
+    return this.sendToQueue(queue, payload, { replyTo: true });
   }
 }

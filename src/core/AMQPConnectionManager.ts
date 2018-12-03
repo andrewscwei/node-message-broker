@@ -17,11 +17,6 @@ export interface AMQPConnectionManagerOptions {
 
 export interface AMQPConnectionManagerSendOptions {
   /**
-   * Name of the queue to send the message to.
-   */
-  queue: string;
-
-  /**
    * Indicates the name of the queue of which the publisher is expecting a
    * reply. Provide the name of the queue or simply set this to `true` to use
    * the default reply-to queue with a correlation ID. If set to `false`, no
@@ -39,11 +34,6 @@ export interface AMQPConnectionManagerSendOptions {
 }
 
 export interface AMQPConnectionManagerReceiveOptions {
-  /**
-   * Name of the queue to await for message consumption.
-   */
-  queue: string;
-
   /**
    * Indicates the name of the queue of which the publisher is expecting a
    * reply. Provide the name of the queue or simply set this to `true` to use
@@ -173,12 +163,12 @@ export default class AMQPConnectionManager extends EventEmitter {
     }
   }
 
-  async send(payload: MessagePayload, { queue, durable = true, replyTo = false }: AMQPConnectionManagerSendOptions): Promise<void | MessagePayload> {
+  async sendToQueue(queue: string, payload: MessagePayload, { durable = true, replyTo = false }: AMQPConnectionManagerSendOptions = {}): Promise<void | MessagePayload> {
     // Ensure there is a connection.
     if (!this.connection) {
       return new Promise((resolve, reject) => {
         this.once(AMQPEventType.CONNECT, () => {
-          this.send(payload, { queue, durable, replyTo })
+          this.sendToQueue(queue, payload, { durable, replyTo })
             .then(message => resolve(message || undefined))
             .catch(error => reject(error));
         });
@@ -189,7 +179,6 @@ export default class AMQPConnectionManager extends EventEmitter {
     if (!isValidMessagePayload(payload)) {
       throw new Error('Invalid message payload provided, it must be a plain object');
     }
-
 
     const corrId = uuid();
 
@@ -230,12 +219,12 @@ export default class AMQPConnectionManager extends EventEmitter {
     });
   }
 
-  async receive(handler: (payload?: MessagePayload) => Promise<MessagePayload | void>, { queue, ack = true, durable = true, prefetch = 1, replyTo = false }: AMQPConnectionManagerReceiveOptions): Promise<void> {
+  async receiveFromQueue(queue: string, handler: (payload?: MessagePayload) => Promise<MessagePayload | void>, { ack = true, durable = true, prefetch = 1, replyTo = false }: AMQPConnectionManagerReceiveOptions = {}): Promise<void> {
     // Ensure there is an active connection.
     if (!this.connection) {
       return new Promise<void>((resolve, reject) => {
         this.once(AMQPEventType.CONNECT, () => {
-          this.receive(handler, { queue, durable, prefetch, replyTo })
+          this.receiveFromQueue(queue, handler, { durable, prefetch, replyTo })
             .then(() => resolve())
             .catch(error => reject(error));
         });

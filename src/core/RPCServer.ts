@@ -12,6 +12,6 @@ export default class RPCServer extends AMQPConnectionManager {
    *                          to the publisher.
    */
   async reply(queue: string, processPayload: (payload?: MessagePayload) => Promise<MessagePayload>): Promise<void> {
-    return this.receive(processPayload, { queue });
+    return this.receiveFromQueue(queue, processPayload);
   }
 }
