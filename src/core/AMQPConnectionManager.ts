@@ -163,6 +163,95 @@ export default class AMQPConnectionManager extends EventEmitter {
     }
   }
 
+  async broadcast(exchange: string, payload: MessagePayload, { durable = true } = {}): Promise<void> {
+    // Ensure there is a connection.
+    if (!this.connection) {
+      return new Promise<void>((resolve, reject) => {
+        this.once(AMQPEventType.CONNECT, () => {
+          this.broadcast(exchange, payload)
+            .then(() => resolve())
+            .catch(error => reject(error));
+        });
+      });
+    }
+
+    // Ensure message payload is valid.
+    if (!isValidMessagePayload(payload)) {
+      throw new Error('Invalid message payload provided, it must be a plain object');
+    }
+
+    const channel = await this.connection.createChannel().catch(error => {
+      throw error;
+    });
+
+    await channel.assertExchange(exchange, 'fanout', { durable }).catch(error => {
+      throw error;
+    });
+
+    debug(`Broadcasting to exchange "${exchange}"...`);
+
+    channel.publish(exchange, '', Buffer.from(JSON.stringify(payload)), {
+      contentType: 'application/json',
+    });
+
+    await channel.close();
+  }
+
+  async receive(exchange: string, handler: (payload?: MessagePayload) => Promise<MessagePayload | void>, { durable = true } = {}) {
+    // Ensure there is an active connection.
+    if (!this.connection) {
+      return new Promise<void>((resolve, reject) => {
+        this.once(AMQPEventType.CONNECT, () => {
+          this.receive(exchange, handler, { durable })
+            .then(() => resolve())
+            .catch(error => reject(error));
+        });
+      });
+    }
+
+    const channel = await this.connection.createChannel().catch(error => {
+      throw error;
+    });
+
+    await channel.assertExchange(exchange, 'fanout', { durable });
+
+    const { queue } = await channel.assertQueue('', { exclusive: true });
+    await channel.bindQueue(queue, exchange, '');
+
+    debug(`Listening for exchange "${exchange}"...`);
+
+    await channel.consume(queue, message => {
+      if (!message) {
+        debug('No message received');
+        return;
+      }
+
+      debug('Received message from publisher');
+
+      const payload = JSON.parse(message.content as any);
+
+      if (message.properties.contentType !== 'application/json') {
+        throw new Error('The message content type must be of JSON format');
+      }
+
+      if (!isValidMessagePayload(payload)) {
+        throw new Error('The message content type must be of JSON format');
+      }
+
+      handler(payload)
+        .then(out => {
+
+        })
+        .catch(error => {
+          throw error;
+        });
+    }, {
+      noAck: true,
+    }).catch(error => {
+      throw error;
+    });
+  }
+
   async sendToQueue(queue: string, payload: MessagePayload, { durable = true, replyTo = false }: AMQPConnectionManagerSendOptions = {}): Promise<void | MessagePayload> {
     // Ensure there is a connection.
     if (!this.connection) {
@@ -261,9 +350,6 @@ export default class AMQPConnectionManager extends EventEmitter {
         throw new Error('The message content type must be of JSON format');
       }
 
-      // Generate the payload. Note that the payload is either a JSON object
-      // or a buffer. Handle both and let the publisher know which format it
-      // is.
       handler(payload)
         .then(out => {
           if (message.properties.replyTo) {
