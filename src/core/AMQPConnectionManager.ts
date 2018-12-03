@@ -1,9 +1,10 @@
 import is from '@sindresorhus/is';
 import amqplib, { Connection } from 'amqplib';
 import { EventEmitter } from 'events';
+import uuid from 'uuid/v1';
 import { AMQPEventType } from '../enums';
 
-const debug = require('debug')('rpc');
+const debug = require('debug')('broker');
 
 /**
  * Default pseudo-queue for RPC clients to request from and reply to.
@@ -23,6 +24,9 @@ export default class AMQPConnectionManager extends EventEmitter {
   protected isConnecting: boolean = false;
   private heartbeat: number = 3;
   private url: string = 'amqp://localhost:5672';
+  private uuid: string = uuid();
+
+  get id() { return this.uuid; }
 
   /**
    * Creates a new AMQPConnectionManager instance.
@@ -38,7 +42,7 @@ export default class AMQPConnectionManager extends EventEmitter {
     if (url) this.url = `amqp://${url}`;
     if (options.heartbeat) this.heartbeat = options.heartbeat;
 
-    debug('Instantiating a new AMQPConnectionManager');
+    debug(`Instantiating a new AMQPConnectionManager <${this.id}>`);
 
     // Attempt to connect right away.
     this.connect();
@@ -72,14 +76,14 @@ export default class AMQPConnectionManager extends EventEmitter {
       return this.connect();
     }
 
-    debug(`Connecting to ${this.url}...`);
+    debug(`<${this.id}> is connecting to ${this.url}...`);
 
     this.isConnecting = true;
 
     try {
       this.connection = await amqplib.connect(this.url);
 
-      debug('Connected successfully');
+      debug(`<${this.id}> connected successfully`);
 
       this.isConnecting = false;
 

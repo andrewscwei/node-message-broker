@@ -1,11 +1,11 @@
 import { ConsumeMessage } from 'amqplib';
 import { EventEmitter } from 'events';
+import uuid from 'uuid';
 import { AMQPEventType } from '../enums';
 import { isValidRPCPayload, RPCPayload } from '../types';
-import randomCorrelationId from '../utils/randomCorrelationId';
 import AMQPConnectionManager, { REPLY_QUEUE } from './AMQPConnectionManager';
 
-const debug = require('debug')('rpc:client');
+const debug = require('debug')('broker:rpc-client');
 
 export default class RPCClient extends AMQPConnectionManager {
   /**
@@ -35,7 +35,7 @@ export default class RPCClient extends AMQPConnectionManager {
 
     const channel = await this.connection.createChannel();
     const eventEmitter = new EventEmitter();
-    const id = randomCorrelationId();
+    const corrId = uuid();
 
     channel.consume(REPLY_QUEUE, message => {
       if (message) {
@@ -52,12 +52,12 @@ export default class RPCClient extends AMQPConnectionManager {
 
     return new Promise((resolve, reject) => {
       channel.sendToQueue(queue, Buffer.from(JSON.stringify(payload)), {
-        correlationId: id,
+        correlationId: corrId,
         contentType: 'application/json',
         replyTo: REPLY_QUEUE,
       });
 
-      eventEmitter.once(id, (message: ConsumeMessage) => {
+      eventEmitter.once(corrId, (message: ConsumeMessage) => {
         debug('Received response in reply queue');
 
         resolve(JSON.parse(message.content as any));

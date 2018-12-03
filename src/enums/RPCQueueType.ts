@@ -1,5 +1,5 @@
-enum RPCMessage {
+enum RPCQueueType {
   PROCESS_SYGNL_ATTACHMENT = 'sygnl.process-attachment',
 }
 
-export default RPCMessage;
+export default RPCQueueType;
