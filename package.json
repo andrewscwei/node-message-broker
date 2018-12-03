@@ -1,6 +1,6 @@
 {
   "name": "@sybl/rpc",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "RPC factory for Sybl core",
   "main": "build/index.js",
   "private": true,
