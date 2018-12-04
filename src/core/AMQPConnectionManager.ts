@@ -2,10 +2,12 @@ import is from '@sindresorhus/is';
 import amqplib, { Connection } from 'amqplib';
 import { EventEmitter } from 'events';
 import uuid from 'uuid/v1';
-import { AMQPEventType, RPCQueueType } from '../enums';
+import { AMQPEventType } from '../enums';
 import { isValidMessagePayload, MessagePayload } from '../types';
 
 const debug = require('debug')('broker');
+
+const DEFAULT_REPLY_TO_QUEUE = 'amq.rabbitmq.reply-to';
 
 type ExchangeType = 'fanout' | 'topic' | 'direct';
 
@@ -250,10 +252,11 @@ export default class AMQPConnectionManager extends EventEmitter {
     if (!this.connection) {
       return new Promise(resolve => {
         this.once(AMQPEventType.CONNECT, () => this.sendToExchange(exchange, payload, {
-          exchangeType,
           correlationId,
           durable,
+          exchangeType,
           key,
+          replyTo,
         }).then(res => resolve(res)));
       });
     }
@@ -272,7 +275,7 @@ export default class AMQPConnectionManager extends EventEmitter {
       const buffer = Buffer.from(JSON.stringify(payload));
 
       if (replyTo !== false) {
-        const replyQueue = replyTo === true ? RPCQueueType.DEFAULT_REPLY_TO : replyTo;
+        const replyQueue = replyTo === true ? DEFAULT_REPLY_TO_QUEUE : replyTo;
 
         channel.consume(replyQueue, message => {
           if (!message || (message.properties.correlationId !== correlationId)) return;
@@ -295,6 +298,7 @@ export default class AMQPConnectionManager extends EventEmitter {
         channel.publish(exchange, routingKey, buffer, {
           correlationId,
           contentType: 'application/json',
+          deliveryMode: durable,
         });
 
         channel.close().then(() => resolve(correlationId));
@@ -320,8 +324,11 @@ export default class AMQPConnectionManager extends EventEmitter {
     if (!this.connection) {
       return new Promise<void>((resolve, reject) => {
         this.once(AMQPEventType.CONNECT, () => this.receiveFromExchange(exchange, handler, {
+          ack,
           durable,
+          exchangeType,
           keys,
+          prefetch,
         }).then(() => resolve()));
       });
     }
@@ -430,7 +437,7 @@ export default class AMQPConnectionManager extends EventEmitter {
         channel.close().then(() => resolve());
       }
       else {
-        const replyQueue = replyTo === true ? RPCQueueType.DEFAULT_REPLY_TO : replyTo;
+        const replyQueue = replyTo === true ? DEFAULT_REPLY_TO_QUEUE : replyTo;
 
         channel.consume(replyQueue, message => {
           if (!message || (message.properties.correlationId !== corrId)) return;
@@ -446,7 +453,7 @@ export default class AMQPConnectionManager extends EventEmitter {
       channel.sendToQueue(q, Buffer.from(JSON.stringify(payload)), {
         correlationId: replyTo === false ? undefined : corrId,
         contentType: 'application/json',
-        replyTo: replyTo === false ? undefined : (replyTo === true ? RPCQueueType.DEFAULT_REPLY_TO : replyTo),
+        replyTo: replyTo === false ? undefined : (replyTo === true ? DEFAULT_REPLY_TO_QUEUE : replyTo),
         deliveryMode: durable,
       });
     });
@@ -524,6 +531,58 @@ export default class AMQPConnectionManager extends EventEmitter {
         });
     }, {
       noAck: !ack,
+    });
+  }
+
+  async broadcast(exchange: string, payload: MessagePayload): Promise<string> {
+    const corrId = await this.sendToExchange(exchange, payload, {
+      correlationId: uuid(),
+      durable: true,
+      exchangeType: 'fanout',
+      key: '',
+      replyTo: false,
+    });
+
+    if (!is.string(corrId)) throw new Error('Expected return value to be a valid correlation ID');
+
+    return corrId;
+  }
+
+  async listen(exchange: string, handler: (payload?: MessagePayload) => Promise<MessagePayload | void>) {
+    return this.receiveFromExchange(exchange, async (routingKey, payload) => {
+      return handler(payload);
+    }, {
+      ack: true,
+      durable: true,
+      exchangeType: 'fanout',
+      keys: '',
+      prefetch: 1,
+    });
+  }
+
+  async sendToTopic(exchange: string, topic: string, payload: MessagePayload): Promise<string> {
+    const corrId = await this.sendToExchange(exchange, payload, {
+      correlationId: uuid(),
+      durable: true,
+      exchangeType: 'topic',
+      key: topic,
+      replyTo: false,
+    });
+
+    if (!is.string(corrId)) throw new Error('Expected return value to be a valid correlation ID');
+
+    return corrId;
+  }
+
+  async listenToTopic(exchange: string, topic: string, handler: (payload?: MessagePayload) => Promise<MessagePayload | void>) {
+    return this.receiveFromExchange(exchange, async (routingKey, payload) => {
+      return handler(payload);
+    }, {
+      ack: true,
+      durable: true,
+      exchangeType: 'topic',
+      keys: topic,
+      prefetch: 1,
     });
   }
 

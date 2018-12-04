@@ -1,15 +1,13 @@
 import is from '@sindresorhus/is';
 import assert from 'assert';
 import { describe, it } from 'mocha';
-import { RPCClient } from '.';
 import AMQPConnectionManager from './core/AMQPConnectionManager';
-import RPCServer from './core/RPCServer';
 import { AMQPEventType } from './enums';
 import { MessagePayload } from './types';
 
 describe('broker', () => {
   it('can create a new AMQPConnectionManager instance that auto connects to a MQ server', async () => {
-    const manager = new AMQPConnectionManager(process.env.MQ_HOST);
+    const manager = new AMQPConnectionManager();
 
     await new Promise((resolve, reject) => {
       manager.on(AMQPEventType.CONNECT, () => resolve());
@@ -19,7 +17,7 @@ describe('broker', () => {
   });
 
   it('auto reconnects to the MQ server after it is disconnected', async () => {
-    const manager = new AMQPConnectionManager(process.env.MQ_HOST);
+    const manager = new AMQPConnectionManager();
     await manager.connect();
 
     assert(manager.isConnected());
@@ -35,31 +33,11 @@ describe('broker', () => {
     assert(manager.isConnected());
   });
 
-  it('can instantiate an RPCClient instance', async () => {
-    const client = new RPCClient(process.env.MQ_HOST);
-
-    await new Promise((resolve, reject) => {
-      client.on(AMQPEventType.CONNECT, () => resolve());
-    });
-
-    assert(client.isConnected());
-  });
-
-  it('can instantiate an RPCServer instance', async () => {
-    const server = new RPCServer(process.env.MQ_HOST);
-
-    await new Promise((resolve, reject) => {
-      server.on(AMQPEventType.CONNECT, () => resolve());
-    });
-
-    assert(server.isConnected());
-  });
-
   it('can pub/sub via RPC', async () => {
-    const client = new RPCClient(process.env.MQ_HOST);
-    const server = new RPCServer(process.env.MQ_HOST);
+    const client = new AMQPConnectionManager();
+    const server = new AMQPConnectionManager();
 
-    server.reply('test-queue', async (payload?: MessagePayload) => {
+    server.receiveFromQueue('test-queue', async (payload?: MessagePayload) => {
       if (is.nullOrUndefined(payload)) throw new Error('No payload provided');
       assert(payload.foo === 'foo');
 
@@ -68,8 +46,60 @@ describe('broker', () => {
       };
     });
 
-    const res: any = await client.request('test-queue', { foo: 'foo' });
+    const res: any = await client.sendToQueue('test-queue', {
+      foo: 'foo',
+    }, {
+      replyTo: true,
+    });
 
     assert(res.foo === 'bar');
+  });
+
+  it('can broadcast to an exchange', done => {
+    const exchangeName = 'fanout';
+    const broadcaster = new AMQPConnectionManager();
+    const consumer1 = new AMQPConnectionManager();
+    const consumer2 = new AMQPConnectionManager();
+    const consumer3 = new AMQPConnectionManager();
+    const consumer4 = new AMQPConnectionManager();
+
+    let i = 0;
+
+    const handler = async (payload?: MessagePayload) => {
+      assert(payload && payload.foo === 'foo');
+
+      i++;
+
+      if (i === 4) done();
+    };
+
+    Promise.all([
+      consumer1.listen(exchangeName, handler),
+      consumer2.listen(exchangeName, handler),
+      consumer3.listen(exchangeName, handler),
+      consumer4.listen(exchangeName, handler),
+    ])
+      .then(() => {
+        broadcaster.broadcast(exchangeName, {
+          foo: 'foo',
+        });
+      });
+  });
+
+  it('can send a message to a topic', done => {
+    const exchangeName = 'topic';
+    const topic = 'foo.bar.baz';
+    const publisher = new AMQPConnectionManager();
+    const consumer = new AMQPConnectionManager();
+
+    consumer.listenToTopic(exchangeName, '*.*.baz', async payload => {
+      assert(payload && payload.foo === 'foo');
+      done();
+    })
+      .then(() => {
+        publisher.sendToTopic(exchangeName, topic, {
+          foo: 'foo',
+        });
+      });
   });
 });

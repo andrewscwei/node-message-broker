@@ -6,12 +6,10 @@ import AMQPConnectionManager, { AMQPConnectionManagerOptions } from './core/AMQP
  * @param url - URL of the MQ server to connect to.
  * @param options - @see AMQPConnectionManagerOptions
  */
-export default function factory(url?: string, options?: AMQPConnectionManagerOptions): AMQPConnectionManager {
+export default function factory(url: string | undefined = process.env.MQ_HOST, options?: AMQPConnectionManagerOptions): AMQPConnectionManager {
   return new AMQPConnectionManager(url, options);
 }
 
-export { default as RPCClient } from './core/RPCClient';
-export { default as RPCServer } from './core/RPCServer';
 export * from './enums';
 export * from './types';
 export { AMQPConnectionManager, AMQPConnectionManagerOptions };
