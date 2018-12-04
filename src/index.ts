@@ -6,7 +6,7 @@ import AMQPConnectionManager, { AMQPConnectionManagerOptions } from './core/AMQP
  * @param url - URL of the MQ server to connect to.
  * @param options - @see AMQPConnectionManagerOptions
  */
-export default function factory(url: string | undefined = process.env.MQ_HOST, options?: AMQPConnectionManagerOptions): AMQPConnectionManager {
+export default function factory(url?: string, options?: AMQPConnectionManagerOptions): AMQPConnectionManager {
   return new AMQPConnectionManager(url, options);
 }
 

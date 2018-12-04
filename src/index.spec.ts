@@ -7,7 +7,7 @@ import { MessagePayload } from './types';
 
 describe('message-broker', () => {
   it('can create a new AMQPConnectionManager instance that auto connects to a MQ server', async () => {
-    const manager = new AMQPConnectionManager();
+    const manager = new AMQPConnectionManager(process.env.MQ_HOST);
 
     await new Promise((resolve, reject) => {
       manager.on(AMQPEventType.CONNECT, () => resolve());
@@ -17,7 +17,7 @@ describe('message-broker', () => {
   });
 
   it('auto reconnects to the MQ server after it is disconnected', async () => {
-    const manager = new AMQPConnectionManager();
+    const manager = new AMQPConnectionManager(process.env.MQ_HOST);
     await manager.connect();
 
     assert(manager.isConnected());
@@ -34,8 +34,8 @@ describe('message-broker', () => {
   });
 
   it('can pub/sub via RPC', async () => {
-    const client = new AMQPConnectionManager();
-    const server = new AMQPConnectionManager();
+    const client = new AMQPConnectionManager(process.env.MQ_HOST);
+    const server = new AMQPConnectionManager(process.env.MQ_HOST);
 
     server.receiveFromQueue('test-queue', async (payload?: MessagePayload) => {
       if (is.nullOrUndefined(payload)) throw new Error('No payload provided');
@@ -57,11 +57,11 @@ describe('message-broker', () => {
 
   it('can broadcast to an exchange', done => {
     const exchangeName = 'fanout';
-    const broadcaster = new AMQPConnectionManager();
-    const consumer1 = new AMQPConnectionManager();
-    const consumer2 = new AMQPConnectionManager();
-    const consumer3 = new AMQPConnectionManager();
-    const consumer4 = new AMQPConnectionManager();
+    const broadcaster = new AMQPConnectionManager(process.env.MQ_HOST);
+    const consumer1 = new AMQPConnectionManager(process.env.MQ_HOST);
+    const consumer2 = new AMQPConnectionManager(process.env.MQ_HOST);
+    const consumer3 = new AMQPConnectionManager(process.env.MQ_HOST);
+    const consumer4 = new AMQPConnectionManager(process.env.MQ_HOST);
 
     let i = 0;
 
@@ -89,8 +89,8 @@ describe('message-broker', () => {
   it('can send a message to a topic', done => {
     const exchangeName = 'topic';
     const topic = 'foo.bar.baz';
-    const publisher = new AMQPConnectionManager();
-    const consumer = new AMQPConnectionManager();
+    const publisher = new AMQPConnectionManager(process.env.MQ_HOST);
+    const consumer = new AMQPConnectionManager(process.env.MQ_HOST);
 
     consumer.listenToTopic(exchangeName, '*.*.baz', async payload => {
       assert(payload && payload.foo === 'foo');
