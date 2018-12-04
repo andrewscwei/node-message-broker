@@ -12,4 +12,5 @@ export default function factory(url?: string, options?: AMQPConnectionManagerOpt
 
 export * from './enums';
 export * from './types';
+export * from './utils';
 export { AMQPConnectionManager, AMQPConnectionManagerOptions };

@@ -92,7 +92,7 @@ describe('message-broker', () => {
     const publisher = new AMQPConnectionManager(process.env.MQ_HOST);
     const consumer = new AMQPConnectionManager(process.env.MQ_HOST);
 
-    consumer.listenToTopic(exchangeName, '*.*.baz', async payload => {
+    consumer.listenForTopic(exchangeName, '*.*.baz', async (routingKey, payload) => {
       assert(payload && payload.foo === 'foo');
       done();
     })

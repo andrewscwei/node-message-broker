@@ -4,6 +4,8 @@ export type MessagePayload = Readonly<{
   [key: string]: any;
 }>;
 
+export type ExchangeType = 'fanout' | 'topic' | 'direct';
+
 /**
  * Validates that a given value is a valid payload.
  *

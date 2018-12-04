@@ -3,13 +3,12 @@ import amqplib, { Connection } from 'amqplib';
 import { EventEmitter } from 'events';
 import uuid from 'uuid/v1';
 import { AMQPEventType } from '../enums';
-import { isValidMessagePayload, MessagePayload } from '../types';
+import { ExchangeType, isValidMessagePayload, MessagePayload } from '../types';
+import { createCorrelationId } from '../utils';
 
 const debug = require('debug')('message-broker');
 
 const DEFAULT_REPLY_TO_QUEUE = 'amq.rabbitmq.reply-to';
-
-type ExchangeType = 'fanout' | 'topic' | 'direct';
 
 export interface AMQPConnectionManagerOptions {
   /**
@@ -121,6 +120,79 @@ export interface AMQPConnectionManagerReceiveFromExchangeOptions {
    * Indicates the routing key(s) of the exchange to subscribe to.
    */
   keys?: string | string[];
+
+  /**
+   * Determines how many messages this consumer can receive on the same queue
+   * before any acknowledgement was sent.
+   */
+  prefetch?: number;
+}
+
+export interface AMQPConnectionManagerBroadcastOptions {
+  /**
+   * Correlation ID of this message. If none provided, a random one will be
+   * generated.
+   */
+  correlationId?: string;
+
+  /**
+   * Indicates whether the message should be preserved in the case that the
+   * publisher dies. If this is `true`, the queue which the message is sent to
+   * will be marked as durable and the message that is sent will be marked as
+   * persistent, i.e. setting `deliveryMode` to `true`.
+   */
+  durable?: boolean;
+}
+
+export interface AMQPConnectionManagerListenOptions {
+  /**
+   * Indicates whether the sent message should be acknowledged when consumed.
+   */
+  ack?: boolean;
+
+  /**
+   * Indicates whether the queue which the publisher sent its messages to is
+   * marked as durable. This is required because in case the queue is not
+   * created or destroyed for whatever reason, the consumer can recreate the
+   * queue with the same properties.
+   */
+  durable?: boolean;
+
+  /**
+   * Determines how many messages this consumer can receive on the same queue
+   * before any acknowledgement was sent.
+   */
+  prefetch?: number;
+}
+
+export interface AMQPConnectionManagerSendToTopicOptions {
+  /**
+   * Correlation ID of this message. If none provided, a random one will be
+   * generated.
+   */
+  correlationId?: string;
+
+  /**
+   * Indicates whether the message should be preserved in the case that the
+   * publisher dies. If this is `true`, the queue which the message is sent to
+   * will be marked as durable.
+   */
+  durable?: boolean;
+}
+
+export interface AMQPConnectionManagerListenForTopicOptions {
+  /**
+   * Indicates whether the sent message should be acknowledged when consumed.
+   */
+  ack?: boolean;
+
+  /**
+   * Indicates whether the queue which the publisher sent its messages to is
+   * marked as durable. This is required because in case the queue is not
+   * created or destroyed for whatever reason, the consumer can recreate the
+   * queue with the same properties.
+   */
+  durable?: boolean;
 
   /**
    * Determines how many messages this consumer can receive on the same queue
@@ -242,7 +314,7 @@ export default class AMQPConnectionManager extends EventEmitter {
    *          consumer. Otherwise it returns the reply from the consumer.
    */
   async sendToExchange(exchange: string, payload: MessagePayload, {
-    correlationId = uuid(),
+    correlationId = createCorrelationId(),
     durable = true,
     exchangeType = 'fanout',
     key = '',
@@ -408,7 +480,7 @@ export default class AMQPConnectionManager extends EventEmitter {
    *          reply, the correlation ID otherwise.
    */
   async sendToQueue(queue: string, payload: MessagePayload, {
-    correlationId = uuid(),
+    correlationId = createCorrelationId(),
     durable = true,
     replyTo = false,
   }: AMQPConnectionManagerSendToQueueOptions = {}): Promise<string | MessagePayload> {
@@ -426,7 +498,6 @@ export default class AMQPConnectionManager extends EventEmitter {
     // Ensure message payload is valid.
     if (!isValidMessagePayload(payload)) throw new Error('Invalid message payload provided, it must be a plain object');
 
-    const corrId = uuid();
     const channel = await this.connection.createChannel();
     const { queue: q } = await channel.assertQueue(queue, { durable });
 
@@ -440,9 +511,9 @@ export default class AMQPConnectionManager extends EventEmitter {
         const replyQueue = replyTo === true ? DEFAULT_REPLY_TO_QUEUE : replyTo;
 
         channel.consume(replyQueue, message => {
-          if (!message || (message.properties.correlationId !== corrId)) return;
+          if (!message || (message.properties.correlationId !== correlationId)) return;
 
-          debug(`Received response in reply queue for correlation ID ${corrId}`);
+          debug(`Received response in reply queue for correlation ID ${correlationId}`);
 
           channel.close().then(() => resolve(JSON.parse(message.content as any)));
         }, {
@@ -451,7 +522,7 @@ export default class AMQPConnectionManager extends EventEmitter {
       }
 
       channel.sendToQueue(q, Buffer.from(JSON.stringify(payload)), {
-        correlationId: replyTo === false ? undefined : corrId,
+        correlationId,
         contentType: 'application/json',
         replyTo: replyTo === false ? undefined : (replyTo === true ? DEFAULT_REPLY_TO_QUEUE : replyTo),
         deliveryMode: durable,
@@ -534,10 +605,22 @@ export default class AMQPConnectionManager extends EventEmitter {
     });
   }
 
-  async broadcast(exchange: string, payload: MessagePayload): Promise<string> {
+  /**
+   * Broadcasts a message to an exchange.
+   *
+   * @param exchange - Name of the exchange.
+   * @param payload - Message payload.
+   * @param options - @see AMQPConnectionManagerBroadcastOptions
+   *
+   * @returns The correlation ID.
+   */
+  async broadcast(exchange: string, payload: MessagePayload, {
+    correlationId = createCorrelationId(),
+    durable = true,
+  }: AMQPConnectionManagerBroadcastOptions = {}): Promise<string> {
     const corrId = await this.sendToExchange(exchange, payload, {
-      correlationId: uuid(),
-      durable: true,
+      correlationId,
+      durable,
       exchangeType: 'fanout',
       key: '',
       replyTo: false,
@@ -548,22 +631,46 @@ export default class AMQPConnectionManager extends EventEmitter {
     return corrId;
   }
 
-  async listen(exchange: string, handler: (payload?: MessagePayload) => Promise<MessagePayload | void>) {
+  /**
+   * Listens for a message broadcast.
+   *
+   * @param exchange - Name of the exchange.
+   * @param handler - Handler invoked when the message is received.
+   * @param options - @see AMQPConnectionManagerListenOptions
+   */
+  async listen(exchange: string, handler: (payload?: MessagePayload) => Promise<MessagePayload | void>, {
+    ack = true,
+    durable = true,
+    prefetch = 1,
+  }: AMQPConnectionManagerListenOptions = {}) {
     return this.receiveFromExchange(exchange, async (routingKey, payload) => {
       return handler(payload);
     }, {
-      ack: true,
-      durable: true,
+      ack,
+      durable,
       exchangeType: 'fanout',
       keys: '',
-      prefetch: 1,
+      prefetch,
     });
   }
 
-  async sendToTopic(exchange: string, topic: string, payload: MessagePayload): Promise<string> {
+  /**
+   * Sends a message to a topic.
+   *
+   * @param exchange - Name of the exchange.
+   * @param topic - Routing key of the topic.
+   * @param payload - Message payload.
+   * @param options - @see AMQPConnectionManagerSendToTopicOptions
+   *
+   * @returns The correlation ID.
+   */
+  async sendToTopic(exchange: string, topic: string, payload: MessagePayload, {
+    correlationId = createCorrelationId(),
+    durable = true,
+  }: AMQPConnectionManagerSendToTopicOptions = {}): Promise<string> {
     const corrId = await this.sendToExchange(exchange, payload, {
-      correlationId: uuid(),
-      durable: true,
+      correlationId,
+      durable,
       exchangeType: 'topic',
       key: topic,
       replyTo: false,
@@ -574,15 +681,24 @@ export default class AMQPConnectionManager extends EventEmitter {
     return corrId;
   }
 
-  async listenToTopic(exchange: string, topic: string, handler: (payload?: MessagePayload) => Promise<MessagePayload | void>) {
-    return this.receiveFromExchange(exchange, async (routingKey, payload) => {
-      return handler(payload);
-    }, {
-      ack: true,
-      durable: true,
+  /**
+   * Listens for a message to arrive for a topic.
+   *
+   * @param exchange - Name of the exchange.
+   * @param topic - Routing key(s) of the topic.
+   * @param handler - Handler invoked when the message is received.
+   */
+  async listenForTopic(exchange: string, topic: string | string[], handler: (routingKey: string, payload?: MessagePayload) => Promise<MessagePayload | void>, {
+    ack = true,
+    durable = true,
+    prefetch = 1,
+  }: AMQPConnectionManagerListenForTopicOptions = {}) {
+    return this.receiveFromExchange(exchange, handler, {
+      ack,
+      durable,
       exchangeType: 'topic',
       keys: topic,
-      prefetch: 1,
+      prefetch,
     });
   }
 
