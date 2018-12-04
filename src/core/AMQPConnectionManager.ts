@@ -390,7 +390,7 @@ export default class AMQPConnectionManager extends EventEmitter {
     durable = true,
     exchangeType = 'fanout',
     keys = '',
-    prefetch = 1,
+    prefetch = 0,
   }: AMQPConnectionManagerReceiveFromExchangeOptions = {}) {
     // Ensure there is an active connection.
     if (!this.connection) {
@@ -540,7 +540,7 @@ export default class AMQPConnectionManager extends EventEmitter {
   async receiveFromQueue(queue: string, handler: (payload?: MessagePayload) => Promise<MessagePayload | void>, {
     ack = true,
     durable = true,
-    prefetch = 1,
+    prefetch = 0,
   }: AMQPConnectionManagerReceiveFromQueueOptions = {}): Promise<void> {
     // Ensure there is an active connection.
     if (!this.connection) {
@@ -641,7 +641,7 @@ export default class AMQPConnectionManager extends EventEmitter {
   async listen(exchange: string, handler: (payload?: MessagePayload) => Promise<MessagePayload | void>, {
     ack = true,
     durable = true,
-    prefetch = 1,
+    prefetch = 0,
   }: AMQPConnectionManagerListenOptions = {}) {
     return this.receiveFromExchange(exchange, async (routingKey, payload) => {
       return handler(payload);
@@ -691,7 +691,7 @@ export default class AMQPConnectionManager extends EventEmitter {
   async listenForTopic(exchange: string, topic: string | string[], handler: (routingKey: string, payload?: MessagePayload) => Promise<MessagePayload | void>, {
     ack = true,
     durable = true,
-    prefetch = 1,
+    prefetch = 0,
   }: AMQPConnectionManagerListenForTopicOptions = {}) {
     return this.receiveFromExchange(exchange, handler, {
       ack,
