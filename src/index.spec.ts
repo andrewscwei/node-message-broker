@@ -5,7 +5,7 @@ import AMQPConnectionManager from './core/AMQPConnectionManager';
 import { AMQPEventType } from './enums';
 import { MessagePayload } from './types';
 
-describe('broker', () => {
+describe('message-broker', () => {
   it('can create a new AMQPConnectionManager instance that auto connects to a MQ server', async () => {
     const manager = new AMQPConnectionManager();
 

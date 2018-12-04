@@ -1,15 +1,15 @@
 version: "3.4"
 services:
-  broker:
+  message-broker:
     build:
       context: .
       target: test
-    container_name: "broker"
+    container_name: "message-broker"
     depends_on:
       - "mq"
     environment:
       MQ_HOST: "mq:5672"
-    image: "broker:test"
+    image: "message-broker:test"
     links:
       - "mq"
   mq:

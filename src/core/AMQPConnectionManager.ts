@@ -5,7 +5,7 @@ import uuid from 'uuid/v1';
 import { AMQPEventType } from '../enums';
 import { isValidMessagePayload, MessagePayload } from '../types';
 
-const debug = require('debug')('broker');
+const debug = require('debug')('message-broker');
 
 const DEFAULT_REPLY_TO_QUEUE = 'amq.rabbitmq.reply-to';
 
@@ -160,7 +160,7 @@ export default class AMQPConnectionManager extends EventEmitter {
 
   /**
    * Checks if this AMQPConnectionManager instance is connected to the MQ
-   * broker.
+   * message-broker.
    *
    * @returns `true` if connected, `false` otherwise.
    */

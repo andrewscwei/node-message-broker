@@ -1,5 +1,5 @@
 {
-  "name": "@sybl/broker",
+  "name": "@sybl/message-broker",
   "version": "0.3.0",
   "description": "Sybl core message broker",
   "main": "build/index.js",
@@ -8,16 +8,16 @@
     "prepare": "npm run build",
     "clean": "rimraf build",
     "build": "npm run clean && tsc",
-    "test": "NODE_ENV=test DEBUG=broker* mocha --timeout 20000 --reporter spec --full-trace --colors --recursive --bail --exit $([ -z \"$npm_config_path\" ] && echo build/**/*.spec.js || echo $npm_config_path)",
-    "mq": "docker run --name broker-mq -d --rm -p 5672:5672 rabbitmq:3.7.8",
-    "mq:stop": "docker stop broker-mq",
+    "test": "NODE_ENV=test DEBUG=message-broker* mocha --timeout 20000 --reporter spec --full-trace --colors --recursive --bail --exit $([ -z \"$npm_config_path\" ] && echo build/**/*.spec.js || echo $npm_config_path)",
+    "mq": "docker run --name message-broker-mq -d --rm -p 5672:5672 rabbitmq:3.7.8",
+    "mq:stop": "docker stop message-broker-mq",
     "lint": "tslint \"src/**/*.ts\" --project tsconfig.json",
     "lint:fix": "npm run lint -- --fix",
     "ship:test": "docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sybl/broker.git"
+    "url": "git+https://github.com/sybl/node-message-broker.git"
   },
   "files": [
     "build"
@@ -25,9 +25,9 @@
   "author": "Andrew Wei <andrewscwei@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/sybl/broker/issues"
+    "url": "https://github.com/sybl/node-message-broker/issues"
   },
-  "homepage": "https://github.com/sybl/broker#readme",
+  "homepage": "https://github.com/sybl/node-message-broker#readme",
   "devDependencies": {
     "@types/debug": "^0.0.31",
     "@types/mocha": "^5.2.5",
