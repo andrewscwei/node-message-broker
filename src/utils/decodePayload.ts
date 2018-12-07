@@ -15,7 +15,7 @@ function mapValuesToObjectID(obj: { [key: string]: any }) {
       obj[k] = mapValuesToObjectID(val);
     }
     else if (isValidObjectID(val)) {
-      obj[k] = new ObjectID(val);
+      // obj[k] = new ObjectID(val);
     }
   }
 
