@@ -1,8 +1,14 @@
+###
+# Base Node.js image.
+##
+FROM node:10.14.1 as build-env
+
+
 ## Build
 # Install dev dependencies and build the app.
 ##
 
-FROM node:10.12.0 as build
+FROM build-env as build
 
 WORKDIR /var/app
 

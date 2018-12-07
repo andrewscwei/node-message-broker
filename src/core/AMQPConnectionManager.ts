@@ -4,7 +4,7 @@ import { EventEmitter } from 'events';
 import uuid from 'uuid/v1';
 import { AMQPEventType } from '../enums';
 import { ExchangeType, isValidMessagePayload, MessagePayload } from '../types';
-import { createCorrelationId } from '../utils';
+import { createCorrelationId, decodePayload, encodePayload } from '../utils';
 
 const debug = require('debug')('message-broker');
 
@@ -344,7 +344,7 @@ export default class AMQPConnectionManager extends EventEmitter {
 
     return new Promise<MessagePayload | string>(resolve => {
       const routingKey = exchangeType === 'fanout' ? '' : key;
-      const buffer = Buffer.from(JSON.stringify(payload));
+      const buffer = encodePayload(payload);
 
       if (replyTo !== false) {
         const replyQueue = replyTo === true ? DEFAULT_REPLY_TO_QUEUE : replyTo;
@@ -354,7 +354,7 @@ export default class AMQPConnectionManager extends EventEmitter {
 
           debug(`Received response in reply queue for correlation ID ${correlationId}`);
 
-          channel.close().then(() => resolve(JSON.parse(message.content as any)));
+          channel.close().then(() => resolve(decodePayload(message.content)));
         }, {
           noAck: true,
         });
@@ -432,7 +432,7 @@ export default class AMQPConnectionManager extends EventEmitter {
 
       debug('Received message from publisher');
 
-      const payload = JSON.parse(message.content as any);
+      const payload = decodePayload(message.content);
 
       if (message.properties.contentType !== 'application/json') {
         throw new Error('The message content type must be of JSON format');
@@ -447,7 +447,7 @@ export default class AMQPConnectionManager extends EventEmitter {
           if (message.properties.replyTo) {
             debug('Sending response to publisher...');
 
-            channel.sendToQueue(message.properties.replyTo, Buffer.from(JSON.stringify(out || {})), {
+            channel.sendToQueue(message.properties.replyTo, encodePayload(out || {}), {
               correlationId: message.properties.correlationId,
               contentType: 'application/json',
             });
@@ -515,13 +515,13 @@ export default class AMQPConnectionManager extends EventEmitter {
 
           debug(`Received response in reply queue for correlation ID ${correlationId}`);
 
-          channel.close().then(() => resolve(JSON.parse(message.content as any)));
+          channel.close().then(() => resolve(decodePayload(message.content)));
         }, {
           noAck: true,
         });
       }
 
-      channel.sendToQueue(q, Buffer.from(JSON.stringify(payload)), {
+      channel.sendToQueue(q, encodePayload(payload), {
         correlationId,
         contentType: 'application/json',
         replyTo: replyTo === false ? undefined : (replyTo === true ? DEFAULT_REPLY_TO_QUEUE : replyTo),
@@ -568,7 +568,7 @@ export default class AMQPConnectionManager extends EventEmitter {
 
       debug('Received message from publisher');
 
-      const payload = JSON.parse(message.content as any);
+      const payload = decodePayload(message.content);
 
       if (message.properties.contentType !== 'application/json') {
         throw new Error('The message content type must be of JSON format');
@@ -583,7 +583,7 @@ export default class AMQPConnectionManager extends EventEmitter {
           if (message.properties.replyTo) {
             debug('Sending response to publisher...');
 
-            channel.sendToQueue(message.properties.replyTo, Buffer.from(JSON.stringify(out || {})), {
+            channel.sendToQueue(message.properties.replyTo, encodePayload(out || {}), {
               correlationId: message.properties.correlationId,
               contentType: 'application/json',
             });
