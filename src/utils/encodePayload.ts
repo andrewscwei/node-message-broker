@@ -1,5 +1,5 @@
+import { ObjectID } from '@andrewscwei/mongodb-odm';
 import is from '@sindresorhus/is';
-import { ObjectID } from 'bson';
 import { MessagePayload } from '../types';
 
 function mapObjectIDsToString(obj: { [key: string]: any }) {
