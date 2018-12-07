@@ -14,12 +14,28 @@ function mapValuesToObjectID(obj: { [key: string]: any }) {
     else if (is.plainObject(val)) {
       obj[k] = mapValuesToObjectID(val);
     }
-    else if (ObjectID.isValid(val)) {
+    else if (isValidObjectID(val)) {
       obj[k] = new ObjectID(val);
     }
   }
 
   return obj;
+}
+
+function isValidObjectID(val: any) {
+  try {
+    if (val instanceof ObjectID) return true;
+    if (!ObjectID.isValid(val)) return false;
+
+    const objectId = new ObjectID(val);
+
+    if (objectId.toHexString() !== String(val)) return false;
+
+    return true;
+  }
+  catch (err) {
+    return false;
+  }
 }
 
 export default function decodePayload(buffer: Buffer): MessagePayload {
