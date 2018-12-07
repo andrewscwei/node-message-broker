@@ -1,6 +1,6 @@
 {
   "name": "@sybl/message-broker",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Sybl core message broker",
   "main": "build/index.js",
   "private": true,
