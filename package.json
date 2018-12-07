@@ -1,6 +1,6 @@
 {
   "name": "@sybl/message-broker",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Sybl core message broker",
   "main": "build/index.js",
   "private": true,
@@ -29,6 +29,7 @@
   },
   "homepage": "https://github.com/sybl/node-message-broker#readme",
   "devDependencies": {
+    "@types/bson": "^1.0.11",
     "@types/debug": "^0.0.31",
     "@types/mocha": "^5.2.5",
     "@types/uuid": "^3.4.4",
@@ -39,10 +40,10 @@
     "typescript": "^3.1.6"
   },
   "dependencies": {
-    "@andrewscwei/mongodb-odm": "^0.40.0",
     "@sindresorhus/is": "^0.13.0",
     "@types/amqplib": "^0.5.9",
     "amqplib": "^0.5.2",
+    "bson": "^4.0.1",
     "debug": "^4.1.0",
     "uuid": "^3.3.2"
   },
