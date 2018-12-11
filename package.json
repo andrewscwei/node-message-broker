@@ -1,6 +1,6 @@
 {
   "name": "@sybl/message-broker",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Sybl core message broker",
   "main": "build/index.js",
   "private": true,
@@ -34,7 +34,6 @@
     "@types/debug": "^0.0.31",
     "@types/mocha": "^5.2.5",
     "@types/parse-json": "^4.0.0",
-    "@types/serialize-error": "^2.1.0",
     "@types/uuid": "^3.4.4",
     "mocha": "^5.2.0",
     "rimraf": "^2.6.2",
@@ -45,6 +44,7 @@
   "dependencies": {
     "@sindresorhus/is": "^0.13.0",
     "@types/amqplib": "^0.5.9",
+    "@types/serialize-error": "^2.1.0",
     "amqplib": "^0.5.2",
     "bson": "^4.0.1",
     "debug": "^4.1.0",
