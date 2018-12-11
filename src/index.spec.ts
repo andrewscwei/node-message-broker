@@ -3,7 +3,7 @@ import assert from 'assert';
 import { describe, it } from 'mocha';
 import AMQPConnectionManager from './core/AMQPConnectionManager';
 import { AMQPEventType } from './enums';
-import { MessagePayload } from './types';
+import { MessagePayload, typeIsErrorPayload } from './types';
 
 describe('message-broker', () => {
   it('can create a new AMQPConnectionManager instance that auto connects to a MQ server', async () => {
@@ -37,7 +37,7 @@ describe('message-broker', () => {
     const client = new AMQPConnectionManager(process.env.MQ_HOST);
     const server = new AMQPConnectionManager(process.env.MQ_HOST);
 
-    server.receiveFromQueue('test-queue', async (payload?: MessagePayload) => {
+    server.receiveFromQueue('test-queue-success', async (payload?: MessagePayload) => {
       if (is.nullOrUndefined(payload)) throw new Error('No payload provided');
       assert(payload.foo === 'foo');
 
@@ -46,13 +46,30 @@ describe('message-broker', () => {
       };
     });
 
-    const res: any = await client.sendToQueue('test-queue', {
+    const res: any = await client.sendToQueue('test-queue-success', {
       foo: 'foo',
     }, {
       replyTo: true,
     });
 
     assert(res.foo === 'bar');
+  });
+
+  it('publisher is notified when there is an error on the consumer\'s side', async () => {
+    const client = new AMQPConnectionManager(process.env.MQ_HOST);
+    const server = new AMQPConnectionManager(process.env.MQ_HOST);
+
+    server.receiveFromQueue('test-queue-fail', async payload => {
+      throw new TypeError('Automated error');
+    });
+
+    const res: any = await client.sendToQueue('test-queue-fail', {
+      foo: 'foo',
+    }, {
+      replyTo: true,
+    });
+
+    assert(typeIsErrorPayload(res));
   });
 
   it('can broadcast to an exchange', done => {

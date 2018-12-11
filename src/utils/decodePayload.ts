@@ -1,7 +1,8 @@
-import { MessagePayload } from '../types';
+import parseJson from 'parse-json';
+import { ErrorPayload, MessagePayload } from '../types';
 
-export default function decodePayload(buffer: Buffer): MessagePayload {
+export default function decodePayload(buffer: Buffer): MessagePayload | ErrorPayload {
   const str = buffer.toString();
-  const obj = JSON.parse(str);
+  const obj = parseJson(str);
   return obj;
 }

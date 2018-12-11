@@ -1,9 +1,10 @@
 import is from '@sindresorhus/is';
 import amqplib, { Connection } from 'amqplib';
 import { EventEmitter } from 'events';
+import serializeError from 'serialize-error';
 import uuid from 'uuid/v1';
 import { AMQPEventType } from '../enums';
-import { ExchangeType, isValidMessagePayload, MessagePayload } from '../types';
+import { ErrorPayload, ExchangeType, MessagePayload, typeIsMessagePayload } from '../types';
 import { createCorrelationId, decodePayload, encodePayload } from '../utils';
 
 const debug = require('debug')('message-broker');
@@ -313,13 +314,13 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @returns The correlation ID if this method does not expect a reply from the
    *          consumer. Otherwise it returns the reply from the consumer.
    */
-  async sendToExchange(exchange: string, payload: MessagePayload, {
+  async sendToExchange(exchange: string, payload: MessagePayload | ErrorPayload, {
     correlationId = createCorrelationId(),
     durable = true,
     exchangeType = 'fanout',
     key = '',
     replyTo = false,
-  }: AMQPConnectionManagerSendToExchangeOptions = {}): Promise<MessagePayload | string> {
+  }: AMQPConnectionManagerSendToExchangeOptions = {}): Promise<MessagePayload | ErrorPayload | string> {
     // Ensure there is a connection.
     if (!this.connection) {
       return new Promise(resolve => {
@@ -334,7 +335,7 @@ export default class AMQPConnectionManager extends EventEmitter {
     }
 
     // Ensure message payload is valid.
-    if (!isValidMessagePayload(payload)) throw new Error('Invalid message payload provided, it must be a plain object');
+    if (!typeIsMessagePayload(payload)) throw new Error('Invalid message payload provided, it must be a plain object');
 
     const channel = await this.connection.createChannel();
 
@@ -342,7 +343,7 @@ export default class AMQPConnectionManager extends EventEmitter {
 
     debug(`Sending message to exchange "${exchange}" with key "${key}"...`);
 
-    return new Promise<MessagePayload | string>(resolve => {
+    return new Promise<MessagePayload | ErrorPayload | string>(resolve => {
       const routingKey = exchangeType === 'fanout' ? '' : key;
       const buffer = encodePayload(payload);
 
@@ -385,7 +386,7 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @param handler - Handler invoked when the message is received.
    * @param options - @see AMQPConnectionManagerReceiveFromExchangeOptions
    */
-  async receiveFromExchange(exchange: string, handler: (routingKey: string, payload?: MessagePayload) => Promise<MessagePayload | void>, {
+  async receiveFromExchange(exchange: string, handler: (routingKey: string, payload?: MessagePayload | ErrorPayload) => Promise<MessagePayload | ErrorPayload | void>, {
     ack = true,
     durable = true,
     exchangeType = 'fanout',
@@ -438,14 +439,10 @@ export default class AMQPConnectionManager extends EventEmitter {
         throw new Error('The message content type must be of JSON format');
       }
 
-      if (!isValidMessagePayload(payload)) {
-        throw new Error('The message content type must be of JSON format');
-      }
-
       handler(message.fields.routingKey, payload)
         .then(out => {
           if (message.properties.replyTo) {
-            debug('Sending response to publisher...');
+            debug('Sending success response to publisher...');
 
             channel.sendToQueue(message.properties.replyTo, encodePayload(out || {}), {
               correlationId: message.properties.correlationId,
@@ -459,6 +456,15 @@ export default class AMQPConnectionManager extends EventEmitter {
         })
         .catch(err => {
           debug(`Error occured while handling message: ${err}`);
+
+          if (message.properties.replyTo) {
+            debug('Sending error response to publisher...');
+
+            channel.sendToQueue(message.properties.replyTo, encodePayload(serializeError(err)), {
+              correlationId: message.properties.correlationId,
+              contentType: 'application/json',
+            });
+          }
 
           if (ack) {
             channel.nack(message, false, false);
@@ -479,11 +485,11 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @returns A message payload from the consumer if this operation expects a
    *          reply, the correlation ID otherwise.
    */
-  async sendToQueue(queue: string, payload: MessagePayload, {
+  async sendToQueue(queue: string, payload: MessagePayload | ErrorPayload, {
     correlationId = createCorrelationId(),
     durable = true,
     replyTo = false,
-  }: AMQPConnectionManagerSendToQueueOptions = {}): Promise<string | MessagePayload> {
+  }: AMQPConnectionManagerSendToQueueOptions = {}): Promise<MessagePayload | ErrorPayload | string> {
     // Ensure there is a connection.
     if (!this.connection) {
       return new Promise((resolve, reject) => {
@@ -496,7 +502,7 @@ export default class AMQPConnectionManager extends EventEmitter {
     }
 
     // Ensure message payload is valid.
-    if (!isValidMessagePayload(payload)) throw new Error('Invalid message payload provided, it must be a plain object');
+    if (!typeIsMessagePayload(payload)) throw new Error('Invalid message payload provided, it must be a plain object');
 
     const channel = await this.connection.createChannel();
     const { queue: q } = await channel.assertQueue(queue, { durable });
@@ -537,7 +543,7 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @param handler - Handler invoked when the message is received.
    * @param options - @see AMQPConnectionManagerReceiveFromQueueOptions
    */
-  async receiveFromQueue(queue: string, handler: (payload?: MessagePayload) => Promise<MessagePayload | void>, {
+  async receiveFromQueue(queue: string, handler: (payload?: MessagePayload | ErrorPayload) => Promise<MessagePayload | ErrorPayload | void>, {
     ack = true,
     durable = true,
     prefetch = 0,
@@ -574,14 +580,10 @@ export default class AMQPConnectionManager extends EventEmitter {
         throw new Error('The message content type must be of JSON format');
       }
 
-      if (!isValidMessagePayload(payload)) {
-        throw new Error('The message content type must be of JSON format');
-      }
-
       handler(payload)
         .then(out => {
           if (message.properties.replyTo) {
-            debug('Sending response to publisher...');
+            debug('Sending success response to publisher...');
 
             channel.sendToQueue(message.properties.replyTo, encodePayload(out || {}), {
               correlationId: message.properties.correlationId,
@@ -595,6 +597,15 @@ export default class AMQPConnectionManager extends EventEmitter {
         })
         .catch(err => {
           debug(`Error occured while handling message: ${err}`);
+
+          if (message.properties.replyTo) {
+            debug('Sending error response to publisher...');
+
+            channel.sendToQueue(message.properties.replyTo, encodePayload(serializeError(err)), {
+              correlationId: message.properties.correlationId,
+              contentType: 'application/json',
+            });
+          }
 
           if (ack) {
             channel.nack(message, false, false);
@@ -614,7 +625,7 @@ export default class AMQPConnectionManager extends EventEmitter {
    *
    * @returns The correlation ID.
    */
-  async broadcast(exchange: string, payload: MessagePayload, {
+  async broadcast(exchange: string, payload: MessagePayload | ErrorPayload, {
     correlationId = createCorrelationId(),
     durable = true,
   }: AMQPConnectionManagerBroadcastOptions = {}): Promise<string> {
@@ -638,7 +649,7 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @param handler - Handler invoked when the message is received.
    * @param options - @see AMQPConnectionManagerListenOptions
    */
-  async listen(exchange: string, handler: (payload?: MessagePayload) => Promise<MessagePayload | void>, {
+  async listen(exchange: string, handler: (payload?: MessagePayload | ErrorPayload) => Promise<MessagePayload | ErrorPayload | void>, {
     ack = true,
     durable = true,
     prefetch = 0,
@@ -664,7 +675,7 @@ export default class AMQPConnectionManager extends EventEmitter {
    *
    * @returns The correlation ID.
    */
-  async sendToTopic(exchange: string, topic: string, payload: MessagePayload, {
+  async sendToTopic(exchange: string, topic: string, payload: MessagePayload | ErrorPayload, {
     correlationId = createCorrelationId(),
     durable = true,
   }: AMQPConnectionManagerSendToTopicOptions = {}): Promise<string> {
@@ -688,7 +699,7 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @param topic - Routing key(s) of the topic.
    * @param handler - Handler invoked when the message is received.
    */
-  async listenForTopic(exchange: string, topic: string | string[], handler: (routingKey: string, payload?: MessagePayload) => Promise<MessagePayload | void>, {
+  async listenForTopic(exchange: string, topic: string | string[], handler: (routingKey: string, payload?: MessagePayload | ErrorPayload) => Promise<MessagePayload | ErrorPayload | void>, {
     ack = true,
     durable = true,
     prefetch = 0,

@@ -1,6 +1,6 @@
 {
   "name": "@sybl/message-broker",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Sybl core message broker",
   "main": "build/index.js",
   "private": true,
@@ -8,6 +8,7 @@
     "prepare": "npm run build",
     "clean": "rimraf build",
     "build": "npm run clean && tsc",
+    "test:ts": "NODE_ENV=test DEBUG=message-broker* mocha -r ts-node/register --timeout 20000 --reporter spec --full-trace --colors --recursive --bail --exit src/**/*.spec.ts",
     "test": "NODE_ENV=test DEBUG=message-broker* mocha --timeout 20000 --reporter spec --full-trace --colors --recursive --bail --exit $([ -z \"$npm_config_path\" ] && echo build/**/*.spec.js || echo $npm_config_path)",
     "mq": "docker run --name message-broker-mq -d --rm -p 5672:5672 rabbitmq:3.7.8",
     "mq:stop": "docker stop message-broker-mq",
@@ -32,6 +33,8 @@
     "@types/bson": "^1.0.11",
     "@types/debug": "^0.0.31",
     "@types/mocha": "^5.2.5",
+    "@types/parse-json": "^4.0.0",
+    "@types/serialize-error": "^2.1.0",
     "@types/uuid": "^3.4.4",
     "mocha": "^5.2.0",
     "rimraf": "^2.6.2",
@@ -45,6 +48,8 @@
     "amqplib": "^0.5.2",
     "bson": "^4.0.1",
     "debug": "^4.1.0",
+    "parse-json": "^4.0.0",
+    "serialize-error": "^3.0.0",
     "uuid": "^3.3.2"
   },
   "types": "build/index.d.ts"
