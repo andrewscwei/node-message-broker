@@ -1,5 +1,5 @@
 import is from '@sindresorhus/is';
-import { ErrorObject } from 'serialize-error';
+import serializeError, { ErrorObject } from 'serialize-error';
 
 export type MessagePayload = Readonly<{
   data: any;
@@ -33,6 +33,25 @@ export function typeIsMessagePayload(value: any): value is MessagePayload {
   if ((errorIdx > -1) && !typeIsErrorObject(value.error)) return false;
 
   return true;
+}
+
+export function MessagePayloadMake(value?: any): MessagePayload {
+  if (is.nullOrUndefined(value)) {
+    return {
+      data: null,
+    };
+  }
+  else if (is.error(value)) {
+    return {
+      data: null,
+      error: serializeError(value),
+    };
+  }
+  else {
+    return {
+      data: value,
+    };
+  }
 }
 
 export function typeIsCorrelationID(value: any): value is CorrelationID {

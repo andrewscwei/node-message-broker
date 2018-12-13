@@ -1,10 +1,9 @@
 import is from '@sindresorhus/is';
 import amqplib, { Connection } from 'amqplib';
 import { EventEmitter } from 'events';
-import serializeError from 'serialize-error';
 import uuid from 'uuid/v1';
 import { AMQPEventType } from '../enums';
-import { CorrelationID, ExchangeType, MessagePayload, typeIsCorrelationID, typeIsMessagePayload } from '../types';
+import { CorrelationID, ExchangeType, MessagePayload, MessagePayloadMake, typeIsCorrelationID, typeIsMessagePayload } from '../types';
 import { createCorrelationId, decodePayload, encodePayload } from '../utils';
 
 const debug = require('debug')('message-broker');
@@ -314,7 +313,7 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @returns The correlation ID if this method does not expect a reply from the
    *          consumer. Otherwise it returns the reply from the consumer.
    */
-  async sendToExchange(exchange: string, payload: MessagePayload = { data: null }, {
+  async sendToExchange(exchange: string, payload: MessagePayload = MessagePayloadMake(), {
     correlationId = createCorrelationId(),
     durable = true,
     exchangeType = 'fanout',
@@ -444,7 +443,7 @@ export default class AMQPConnectionManager extends EventEmitter {
         if (message.properties.replyTo) {
           debug('Sending success response to publisher...');
 
-          channel.sendToQueue(message.properties.replyTo, encodePayload(payload || { data: null }), {
+          channel.sendToQueue(message.properties.replyTo, encodePayload(payload || MessagePayloadMake()), {
             correlationId: message.properties.correlationId,
             contentType: 'application/json',
           });
@@ -460,10 +459,7 @@ export default class AMQPConnectionManager extends EventEmitter {
         if (message.properties.replyTo) {
           debug('Sending error response to publisher...');
 
-          channel.sendToQueue(message.properties.replyTo, encodePayload({
-            data: null,
-            error: serializeError(err),
-          }), {
+          channel.sendToQueue(message.properties.replyTo, encodePayload(MessagePayloadMake(err)), {
             correlationId: message.properties.correlationId,
             contentType: 'application/json',
           });
@@ -488,7 +484,7 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @returns A message payload from the consumer if this operation expects a
    *          reply, the correlation ID otherwise.
    */
-  async sendToQueue(queue: string, payload: MessagePayload = { data: null }, {
+  async sendToQueue(queue: string, payload: MessagePayload = MessagePayloadMake(), {
     correlationId = createCorrelationId(),
     durable = true,
     replyTo = false,
@@ -588,7 +584,7 @@ export default class AMQPConnectionManager extends EventEmitter {
         if (message.properties.replyTo) {
           debug('Sending success response to publisher...');
 
-          channel.sendToQueue(message.properties.replyTo, encodePayload(payload || { data: null }), {
+          channel.sendToQueue(message.properties.replyTo, encodePayload(payload || MessagePayloadMake()), {
             correlationId: message.properties.correlationId,
             contentType: 'application/json',
           });
@@ -604,10 +600,7 @@ export default class AMQPConnectionManager extends EventEmitter {
         if (message.properties.replyTo) {
           debug('Sending error response to publisher...');
 
-          channel.sendToQueue(message.properties.replyTo, encodePayload({
-            data: null,
-            error: serializeError(err),
-          }), {
+          channel.sendToQueue(message.properties.replyTo, encodePayload(MessagePayloadMake(err)), {
             correlationId: message.properties.correlationId,
             contentType: 'application/json',
           });
@@ -631,7 +624,7 @@ export default class AMQPConnectionManager extends EventEmitter {
    *
    * @returns The correlation ID.
    */
-  async broadcast(exchange: string, payload: MessagePayload = { data: null }, {
+  async broadcast(exchange: string, payload: MessagePayload = MessagePayloadMake(), {
     correlationId = createCorrelationId(),
     durable = true,
   }: AMQPConnectionManagerBroadcastOptions = {}): Promise<CorrelationID> {
@@ -681,7 +674,7 @@ export default class AMQPConnectionManager extends EventEmitter {
    *
    * @returns The correlation ID.
    */
-  async sendToTopic(exchange: string, topic: string, payload: MessagePayload = { data: null }, {
+  async sendToTopic(exchange: string, topic: string, payload: MessagePayload = MessagePayloadMake(), {
     correlationId = createCorrelationId(),
     durable = true,
   }: AMQPConnectionManagerSendToTopicOptions = {}): Promise<CorrelationID> {

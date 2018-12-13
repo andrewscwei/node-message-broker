@@ -2,7 +2,7 @@ import assert from 'assert';
 import { describe, it } from 'mocha';
 import AMQPConnectionManager from './core/AMQPConnectionManager';
 import { AMQPEventType } from './enums';
-import { MessagePayload } from './types';
+import { MessagePayload, MessagePayloadMake } from './types';
 
 describe('message-broker', () => {
   it('can create a new AMQPConnectionManager instance that auto connects to a MQ server', async () => {
@@ -39,14 +39,10 @@ describe('message-broker', () => {
     server.receiveRPC('test-queue-success', async payload => {
       assert(payload.data === 'foo');
 
-      return {
-        data: 'bar',
-      };
+      return MessagePayloadMake('bar');
     });
 
-    const res = await client.sendRPC('test-queue-success', {
-      data: 'foo',
-    });
+    const res = await client.sendRPC('test-queue-success', MessagePayloadMake('foo'));
 
     assert(res.data === 'bar');
   });
@@ -59,9 +55,7 @@ describe('message-broker', () => {
       throw new TypeError('Automated error');
     });
 
-    const res: any = await client.sendRPC('test-queue-fail', {
-      data: 'foo',
-    });
+    const res: any = await client.sendRPC('test-queue-fail', MessagePayloadMake('foo'));
 
     assert(res.error);
   });
@@ -91,9 +85,7 @@ describe('message-broker', () => {
       consumer4.listen(exchangeName, handler),
     ])
       .then(() => {
-        broadcaster.broadcast(exchangeName, {
-          data: 'foo',
-        });
+        broadcaster.broadcast(exchangeName, MessagePayloadMake('foo'));
       });
   });
 
@@ -108,9 +100,7 @@ describe('message-broker', () => {
       done();
     })
       .then(() => {
-        publisher.sendToTopic(exchangeName, topic, {
-          data: 'foo',
-        });
+        publisher.sendToTopic(exchangeName, topic, MessagePayloadMake('foo'));
       });
   });
 });
