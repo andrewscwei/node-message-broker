@@ -1,9 +1,8 @@
-import is from '@sindresorhus/is';
 import assert from 'assert';
 import { describe, it } from 'mocha';
 import AMQPConnectionManager from './core/AMQPConnectionManager';
 import { AMQPEventType } from './enums';
-import { MessagePayload, typeIsErrorPayload } from './types';
+import { MessagePayload } from './types';
 
 describe('message-broker', () => {
   it('can create a new AMQPConnectionManager instance that auto connects to a MQ server', async () => {
@@ -37,39 +36,34 @@ describe('message-broker', () => {
     const client = new AMQPConnectionManager(process.env.MQ_HOST);
     const server = new AMQPConnectionManager(process.env.MQ_HOST);
 
-    server.receiveFromQueue('test-queue-success', async (payload?: MessagePayload) => {
-      if (is.nullOrUndefined(payload)) throw new Error('No payload provided');
-      assert(payload.foo === 'foo');
+    server.receiveRPC('test-queue-success', async payload => {
+      assert(payload.data === 'foo');
 
       return {
-        foo: 'bar',
+        data: 'bar',
       };
     });
 
-    const res: any = await client.sendToQueue('test-queue-success', {
-      foo: 'foo',
-    }, {
-      replyTo: true,
+    const res = await client.sendRPC('test-queue-success', {
+      data: 'foo',
     });
 
-    assert(res.foo === 'bar');
+    assert(res.data === 'bar');
   });
 
   it('publisher is notified when there is an error on the consumer\'s side', async () => {
     const client = new AMQPConnectionManager(process.env.MQ_HOST);
     const server = new AMQPConnectionManager(process.env.MQ_HOST);
 
-    server.receiveFromQueue('test-queue-fail', async payload => {
+    server.receiveRPC('test-queue-fail', async payload => {
       throw new TypeError('Automated error');
     });
 
-    const res: any = await client.sendToQueue('test-queue-fail', {
-      foo: 'foo',
-    }, {
-      replyTo: true,
+    const res: any = await client.sendRPC('test-queue-fail', {
+      data: 'foo',
     });
 
-    assert(typeIsErrorPayload(res));
+    assert(res.error);
   });
 
   it('can broadcast to an exchange', done => {
@@ -82,8 +76,8 @@ describe('message-broker', () => {
 
     let i = 0;
 
-    const handler = async (payload?: MessagePayload) => {
-      assert(payload && payload.foo === 'foo');
+    const handler = async (payload: MessagePayload) => {
+      assert(payload.data === 'foo');
 
       i++;
 
@@ -98,7 +92,7 @@ describe('message-broker', () => {
     ])
       .then(() => {
         broadcaster.broadcast(exchangeName, {
-          foo: 'foo',
+          data: 'foo',
         });
       });
   });
@@ -110,12 +104,12 @@ describe('message-broker', () => {
     const consumer = new AMQPConnectionManager(process.env.MQ_HOST);
 
     consumer.listenForTopic(exchangeName, '*.*.baz', async (routingKey, payload) => {
-      assert(payload && payload.foo === 'foo');
+      assert(payload.data === 'foo');
       done();
     })
       .then(() => {
         publisher.sendToTopic(exchangeName, topic, {
-          foo: 'foo',
+          data: 'foo',
         });
       });
   });

@@ -2,12 +2,13 @@ import is from '@sindresorhus/is';
 import { ErrorObject } from 'serialize-error';
 
 export type MessagePayload = Readonly<{
-  [key: string]: any;
+  data: any;
+  error?: ErrorObject;
 }>;
 
-export type ErrorPayload = Readonly<ErrorObject>;
-
 export type ExchangeType = 'fanout' | 'topic' | 'direct';
+
+export type CorrelationID = string;
 
 /**
  * Validates that a given value is a valid payload.
@@ -16,15 +17,33 @@ export type ExchangeType = 'fanout' | 'topic' | 'direct';
  *
  * @returns `true` if valid, `false` otherwise.
  */
-export function typeIsMessagePayload(payload: any): payload is MessagePayload {
-  if (typeIsErrorPayload(payload)) return false;
-  if (!is.plainObject(payload)) return false;
+export function typeIsMessagePayload(value: any): value is MessagePayload {
+  if (!is.plainObject(value)) return false;
+
+  const keys = Object.keys(value);
+
+  if (keys.length < 1) return false;
+  if (keys.length > 2) return false;
+
+  const dataIdx = keys.indexOf('data');
+  const errorIdx = keys.indexOf('error');
+
+  if (dataIdx < 0) return false;
+  if (keys.length > 1 && errorIdx < 0) return false;
+  if ((errorIdx > -1) && !typeIsErrorObject(value.error)) return false;
+
   return true;
 }
 
-export function typeIsErrorPayload(payload: any): payload is ErrorPayload {
-  if (!payload.name) return false;
-  if (!payload.stack) return false;
-  if (!payload.message) return false;
+export function typeIsCorrelationID(value: any): value is CorrelationID {
+  if (!is.string(value)) return false;
+  return true;
+}
+
+export function typeIsErrorObject(value: any): value is ErrorObject {
+  if (!is.plainObject(value)) return false;
+  if (!value.name) return false;
+  if (!value.stack) return false;
+  if (!value.message) return false;
   return true;
 }
