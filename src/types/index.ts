@@ -30,7 +30,7 @@ export function typeIsMessagePayload(value: any): value is MessagePayload {
 
   if (dataIdx < 0) return false;
   if (keys.length > 1 && errorIdx < 0) return false;
-  if ((errorIdx > -1) && !typeIsErrorObject(value.error)) return false;
+  if ((errorIdx > -1) && !is.nullOrUndefined(value.error) && !typeIsErrorObject(value.error)) return false;
 
   return true;
 }
