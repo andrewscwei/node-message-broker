@@ -340,7 +340,7 @@ export default class AMQPConnectionManager extends EventEmitter {
 
     await channel.assertExchange(exchange, exchangeType, { durable });
 
-    debug(`Sending message to exchange "${exchange}" with key "${key}"...`);
+    debug(`[${exchange}] Sending message to exchange with key "${key}"...`);
 
     return new Promise<MessagePayload | CorrelationID>(resolve => {
       const routingKey = exchangeType === 'fanout' ? '' : key;
@@ -352,7 +352,7 @@ export default class AMQPConnectionManager extends EventEmitter {
         channel.consume(replyQueue, message => {
           if (!message || (message.properties.correlationId !== correlationId)) return;
 
-          debug(`Received response in reply queue for correlation ID ${correlationId}`);
+          debug(`[${exchange}] Received response in reply queue [${replyQueue}] for correlation ID ${correlationId}`);
 
           channel.close().then(() => resolve(decodePayload(message.content)));
         }, {
@@ -365,6 +365,8 @@ export default class AMQPConnectionManager extends EventEmitter {
           deliveryMode: durable,
           replyTo: replyQueue,
         });
+
+        debug(`[${exchange}] Sending message to exchange with key "${key}"... OK`);
       }
       else {
         channel.publish(exchange, routingKey, buffer, {
@@ -421,17 +423,17 @@ export default class AMQPConnectionManager extends EventEmitter {
       }
     }
 
-    debug(`Listening for exchange "${exchange}" with keys "${keys}"...`);
+    debug(`[${exchange}] Listening for exchange with keys "${keys}"...`);
 
     channel.prefetch(prefetch);
 
     await channel.consume(queue, async message => {
       if (!message) {
-        debug('No message received');
+        debug(`[${exchange}] No message received for keys "${keys}"`);
         return;
       }
 
-      debug('Received message from publisher');
+      debug(`[${exchange}] Received message from publisher for keys "${keys}"`);
 
       try {
         if (message.properties.contentType !== 'application/json') {
@@ -441,7 +443,7 @@ export default class AMQPConnectionManager extends EventEmitter {
         const payload = await handler(message.fields.routingKey, decodePayload(message.content));
 
         if (message.properties.replyTo) {
-          debug('Sending success response to publisher...');
+          debug(`[${exchange}] Sending success response to publisher for keys "${keys}"...`);
 
           channel.sendToQueue(message.properties.replyTo, encodePayload(payload || MessagePayloadMake()), {
             correlationId: message.properties.correlationId,
@@ -454,10 +456,10 @@ export default class AMQPConnectionManager extends EventEmitter {
         }
       }
       catch (err) {
-        debug(`Error occured while handling message: ${err}`);
+        debug(`[${exchange}] Error occured while handling message for keys "${keys}": ${err}`);
 
         if (message.properties.replyTo) {
-          debug('Sending error response to publisher...');
+          debug(`[${exchange}] Sending error response to publisher for keys "${keys}"...`);
 
           channel.sendToQueue(message.properties.replyTo, encodePayload(MessagePayloadMake(err)), {
             correlationId: message.properties.correlationId,
@@ -504,9 +506,10 @@ export default class AMQPConnectionManager extends EventEmitter {
     if (!typeIsMessagePayload(payload)) throw new Error('Invalid payload format');
 
     const channel = await this.connection.createChannel();
-    const { queue: q } = await channel.assertQueue(queue, { durable });
 
-    debug(`Sending to queue "${q}"...`);
+    await channel.assertQueue(queue, { durable });
+
+    debug(`[${queue}] Sending message...`);
 
     return new Promise<MessagePayload | CorrelationID>(resolve => {
       if (replyTo === false) {
@@ -518,7 +521,7 @@ export default class AMQPConnectionManager extends EventEmitter {
         channel.consume(replyQueue, message => {
           if (!message || (message.properties.correlationId !== correlationId)) return;
 
-          debug(`Received response in reply queue for correlation ID ${correlationId}`);
+          debug(`[${queue}] Received response in reply queue [${replyQueue}] for correlation ID ${correlationId}`);
 
           channel.close().then(() => resolve(decodePayload(message.content)));
         }, {
@@ -526,12 +529,14 @@ export default class AMQPConnectionManager extends EventEmitter {
         });
       }
 
-      channel.sendToQueue(q, encodePayload(payload), {
+      channel.sendToQueue(queue, encodePayload(payload), {
         correlationId,
         contentType: 'application/json',
         replyTo: replyTo === false ? undefined : (replyTo === true ? DEFAULT_REPLY_TO_QUEUE : replyTo),
         deliveryMode: durable,
       });
+
+      debug(`[${queue}] Sending message... OK`);
     });
   }
 
@@ -562,17 +567,18 @@ export default class AMQPConnectionManager extends EventEmitter {
     debug(`Listening for queue "${queue}"...`);
 
     const channel = await this.connection.createChannel();
-    const { queue: q } = await channel.assertQueue(queue, { durable });
+
+    await channel.assertQueue(queue, { durable });
 
     channel.prefetch(prefetch);
 
-    await channel.consume(q, async message => {
+    await channel.consume(queue, async message => {
       if (!message) {
-        debug('No message received');
+        debug(`[${queue}] No message received`);
         return;
       }
 
-      debug('Received message from publisher');
+      debug(`[${queue}] Received message from publisher on queue`);
 
       try {
         if (message.properties.contentType !== 'application/json') {
@@ -582,7 +588,7 @@ export default class AMQPConnectionManager extends EventEmitter {
         const payload = await handler(decodePayload(message.content));
 
         if (message.properties.replyTo) {
-          debug('Sending success response to publisher...');
+          debug(`[${queue}] Sending success response to publisher...`);
 
           channel.sendToQueue(message.properties.replyTo, encodePayload(payload || MessagePayloadMake()), {
             correlationId: message.properties.correlationId,
@@ -595,10 +601,10 @@ export default class AMQPConnectionManager extends EventEmitter {
         }
       }
       catch (err) {
-        debug(`Error occured while handling message: ${err}`);
+        debug(`[${queue}] Error occured while handling message: ${err}`);
 
         if (message.properties.replyTo) {
-          debug('Sending error response to publisher...');
+          debug(`[${queue}] Sending error response to publisher for queue...`);
 
           channel.sendToQueue(message.properties.replyTo, encodePayload(MessagePayloadMake(err)), {
             correlationId: message.properties.correlationId,
