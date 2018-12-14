@@ -456,7 +456,10 @@ export default class AMQPConnectionManager extends EventEmitter {
         }
       }
       catch (err) {
-        debug(`[${exchange}] Error occured while handling message for keys "${keys}": ${err}`);
+        debug(`[${exchange}] Error occured while handling message for keys "${keys}": ${err.message}`);
+
+        /* tslint:disable-next-line no-console */
+        console.error(err.stack);
 
         if (message.properties.replyTo) {
           debug(`[${exchange}] Sending error response to publisher for keys "${keys}"...`);
@@ -601,7 +604,10 @@ export default class AMQPConnectionManager extends EventEmitter {
         }
       }
       catch (err) {
-        debug(`[${queue}] Error occured while handling message: ${err}`);
+        debug(`[${queue}] Error occured while handling message: ${err.message}`);
+
+        /* tslint:disable-next-line no-console */
+        console.error(err.stack);
 
         if (message.properties.replyTo) {
           debug(`[${queue}] Sending error response to publisher for queue...`);
@@ -774,7 +780,10 @@ export default class AMQPConnectionManager extends EventEmitter {
         await this.connection.close();
       }
       catch (err) {
-        debug(`Failed to close the connection because: ${err}`);
+        debug(`Failed to close the connection because: ${err.message}`);
+
+        /* tslint:disable-next-line no-console */
+        console.error(err.stack);
       }
 
       this.connection = undefined;
