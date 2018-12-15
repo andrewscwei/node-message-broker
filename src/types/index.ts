@@ -66,3 +66,7 @@ export function typeIsErrorObject(value: any): value is ErrorObject {
   if (!value.message) return false;
   return true;
 }
+
+export type ActionWithParams<T extends { [key: string]: any }> = (params: T) => any;
+
+export type ActionWithoutParams = () => any;
