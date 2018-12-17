@@ -1,7 +1,7 @@
 {
   "name": "@sybl/message-broker",
-  "version": "0.17.0",
-  "description": "Sybl core message broker",
+  "version": "0.19.0",
+  "description": "Node.js message broker that helps managing AMQP connections and sending/receiving messages",
   "main": "build/index.js",
   "private": true,
   "scripts": {
@@ -9,9 +9,7 @@
     "clean": "rimraf build",
     "build": "npm run clean && tsc",
     "test:ts": "NODE_ENV=test DEBUG=message-broker* mocha -r ts-node/register --timeout 20000 --reporter spec --full-trace --colors --recursive --bail --exit src/**/*.spec.ts",
-    "test": "NODE_ENV=test DEBUG=message-broker* mocha --timeout 20000 --reporter spec --full-trace --colors --recursive --bail --exit $([ -z \"$npm_config_path\" ] && echo build/**/*.spec.js || echo $npm_config_path)",
-    "mq": "docker run --name message-broker-mq -d --rm -p 5672:5672 rabbitmq:3.7.8",
-    "mq:stop": "docker stop message-broker-mq",
+    "test": "NODE_ENV=test DEBUG=message-broker* mocha --timeout 20000 --reporter spec --full-trace --colors --recursive --exit $([ -z \"$npm_config_path\" ] && echo build/**/*.spec.js || echo $npm_config_path)",
     "lint": "tslint \"src/**/*.ts\" --project tsconfig.json",
     "lint:fix": "npm run lint -- --fix",
     "ship:test": "docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit"

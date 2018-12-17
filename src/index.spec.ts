@@ -1,6 +1,8 @@
 import assert from 'assert';
 import { describe, it } from 'mocha';
 import AMQPConnectionManager from './core/AMQPConnectionManager';
+import RPCClient from './core/RPCClient';
+import RPCServer from './core/RPCServer';
 import { AMQPEventType } from './enums';
 import { MessagePayload, MessagePayloadMake } from './types';
 
@@ -32,30 +34,45 @@ describe('message-broker', () => {
     assert(manager.isConnected());
   });
 
-  it('can pub/sub via RPC', async () => {
-    const client = new AMQPConnectionManager(process.env.MQ_HOST);
-    const server = new AMQPConnectionManager(process.env.MQ_HOST);
+  it('can pub/sub via RPC queue', async () => {
+    const client = new RPCClient(process.env.MQ_HOST);
+    const server = new RPCServer(process.env.MQ_HOST);
 
-    server.receiveRPC('test-queue-success', async payload => {
+    server.receiveFromQueue('test-queue-success', async payload => {
       assert(payload.data === 'foo');
 
       return MessagePayloadMake('bar');
     });
 
-    const res = await client.sendRPC('test-queue-success', MessagePayloadMake('foo'));
+    const res = await client.sendToQueue('test-queue-success', MessagePayloadMake('foo'));
+
+    assert(res.data === 'bar');
+  });
+
+  it('can pub/sub via RPC topic', async () => {
+    const client = new RPCClient(process.env.MQ_HOST);
+    const server = new RPCServer(process.env.MQ_HOST);
+
+    await server.receiveFromTopic('test-exchange', 'test-topic', async (routingKey, payload) => {
+      assert(payload.data === 'foo');
+
+      return MessagePayloadMake('bar');
+    });
+
+    const res = await client.sendToTopic('test-exchange', 'test-topic', MessagePayloadMake('foo'));
 
     assert(res.data === 'bar');
   });
 
   it('publisher is notified when there is an error on the consumer\'s side', async () => {
-    const client = new AMQPConnectionManager(process.env.MQ_HOST);
-    const server = new AMQPConnectionManager(process.env.MQ_HOST);
+    const client = new RPCClient(process.env.MQ_HOST);
+    const server = new RPCServer(process.env.MQ_HOST);
 
-    server.receiveRPC('test-queue-fail', async payload => {
+    server.receiveFromQueue('test-queue-fail', async payload => {
       throw new TypeError('Automated error');
     });
 
-    const res: any = await client.sendRPC('test-queue-fail', MessagePayloadMake('foo'));
+    const res: any = await client.sendToQueue('test-queue-fail', MessagePayloadMake('foo'));
 
     assert(res.error);
   });
@@ -89,18 +106,16 @@ describe('message-broker', () => {
       });
   });
 
-  it('can send a message to a topic', done => {
+  it('can send a message to a topic', async () => {
     const exchangeName = 'topic';
     const topic = 'foo.bar.baz';
     const publisher = new AMQPConnectionManager(process.env.MQ_HOST);
     const consumer = new AMQPConnectionManager(process.env.MQ_HOST);
 
-    consumer.listenForTopic(exchangeName, '*.*.baz', async (routingKey, payload) => {
+    await consumer.receiveFromTopic(exchangeName, '*.*.baz', async (routingKey, payload) => {
       assert(payload.data === 'foo');
-      done();
-    })
-      .then(() => {
-        publisher.sendToTopic(exchangeName, topic, MessagePayloadMake('foo'));
-      });
+    });
+
+    await publisher.sendToTopic(exchangeName, topic, MessagePayloadMake('foo'));
   });
 });
