@@ -39,7 +39,7 @@ let rpcServer: RPCServer;
  * @param options - Configuration options.
  */
 export function configureMb(options: Configuration) {
-  if (config) {
+  if (!config) {
     config = options;
     debug('Configured message broker', JSON.stringify(options, undefined, 0));
   }
