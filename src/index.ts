@@ -85,7 +85,7 @@ export function getDefaultConsumer(): AMQPConnectionManager {
  *
  * @returns The default RPC client instance.
  */
-export function getDefaultRPCClient(): AMQPConnectionManager {
+export function getDefaultRPCClient(): RPCClient {
   if (!config) throw new Error('You must call #configureMb before using this method');
   const { host, ...options } = config;
   if (!rpcClient) rpcClient = new RPCClient(host, options);
@@ -97,7 +97,7 @@ export function getDefaultRPCClient(): AMQPConnectionManager {
  *
  * @returns The default RPC server instance.
  */
-export function getDefaultRPCServer(): AMQPConnectionManager {
+export function getDefaultRPCServer(): RPCServer {
   if (!config) throw new Error('You must call #configureMb before using this method');
   const { host, ...options } = config;
   if (!rpcServer) rpcServer = new RPCServer(host, options);
