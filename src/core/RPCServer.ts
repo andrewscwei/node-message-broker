@@ -1,3 +1,4 @@
+import { Channel } from 'amqplib';
 import { MessagePayload } from '../types';
 import AMQPConnectionManager, { AMQPConnectionManagerReceiveFromDirectExchangeOptions, AMQPConnectionManagerReceiveFromExchangeOptions, AMQPConnectionManagerReceiveFromQueueOptions, AMQPConnectionManagerReceiveFromTopicOptions } from './AMQPConnectionManager';
 
@@ -9,7 +10,7 @@ export default class RPCServer extends AMQPConnectionManager {
     ack = true,
     durable = true,
     prefetch = 0,
-  }: AMQPConnectionManagerReceiveFromQueueOptions = {}): Promise<void> {
+  }: AMQPConnectionManagerReceiveFromQueueOptions = {}): Promise<Channel> {
     return super.receiveFromQueue(queue, handler, {
       ack,
       durable,
@@ -26,7 +27,7 @@ export default class RPCServer extends AMQPConnectionManager {
     exchangeType = 'fanout',
     keys = '',
     prefetch = 0,
-  }: AMQPConnectionManagerReceiveFromExchangeOptions = {}) {
+  }: AMQPConnectionManagerReceiveFromExchangeOptions = {}): Promise<Channel> {
     return super.receiveFromExchange(exchange, handler, {
       ack,
       durable,
@@ -43,7 +44,7 @@ export default class RPCServer extends AMQPConnectionManager {
     ack = true,
     durable = true,
     prefetch = 0,
-  }: AMQPConnectionManagerReceiveFromDirectExchangeOptions = {}) {
+  }: AMQPConnectionManagerReceiveFromDirectExchangeOptions = {}): Promise<Channel> {
     return super.receiveFromDirectExchange(exchange, key, handler, {
       ack,
       durable,
@@ -58,7 +59,7 @@ export default class RPCServer extends AMQPConnectionManager {
     ack = true,
     durable = true,
     prefetch = 0,
-  }: AMQPConnectionManagerReceiveFromTopicOptions = {}) {
+  }: AMQPConnectionManagerReceiveFromTopicOptions = {}): Promise<Channel> {
     return super.receiveFromTopic(exchange, topic, handler, {
       ack,
       durable,

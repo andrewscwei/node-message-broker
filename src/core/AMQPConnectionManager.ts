@@ -1,5 +1,5 @@
 import is from '@sindresorhus/is';
-import amqplib, { Connection } from 'amqplib';
+import amqplib, { Connection, Channel } from 'amqplib';
 import { EventEmitter } from 'events';
 import uuid from 'uuid/v1';
 import { AMQPEventType } from '../enums';
@@ -440,6 +440,8 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @param exchange - Name of the exchange.
    * @param handler - Handler invoked when the message is received.
    * @param options - @see AMQPConnectionManagerReceiveFromExchangeOptions
+   *
+   * @returns The channel created.
    */
   async receiveFromExchange(exchange: string, handler: (routingKey: string, payload: MessagePayload) => Promise<MessagePayload | void>, {
     ack = true,
@@ -447,18 +449,18 @@ export default class AMQPConnectionManager extends EventEmitter {
     exchangeType = 'fanout',
     keys = '',
     prefetch = 0,
-  }: AMQPConnectionManagerReceiveFromExchangeOptions = {}) {
+  }: AMQPConnectionManagerReceiveFromExchangeOptions = {}): Promise<Channel> {
     // Ensure there is an active connection. If not, retry once a connection is
     // established.
     if (!this.connection) {
-      return new Promise<void>((resolve, reject) => {
+      return new Promise<Channel>((resolve, reject) => {
         this.once(AMQPEventType.CONNECT, () => this.receiveFromExchange(exchange, handler, {
           ack,
           durable,
           exchangeType,
           keys,
           prefetch,
-        }).then(() => resolve()));
+        }).then(channel => resolve(channel)));
       });
     }
 
@@ -531,6 +533,8 @@ export default class AMQPConnectionManager extends EventEmitter {
     }, {
       noAck: !ack,
     });
+
+    return channel;
   }
 
   /**
@@ -604,21 +608,23 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @param queue - Name of the queue.
    * @param handler - Handler invoked when the message is received.
    * @param options - @see AMQPConnectionManagerReceiveFromQueueOptions
+   *
+   * @returns The created channel.
    */
   async receiveFromQueue(queue: string, handler: (payload: MessagePayload) => Promise<MessagePayload | void>, {
     ack = true,
     durable = true,
     prefetch = 0,
-  }: AMQPConnectionManagerReceiveFromQueueOptions = {}): Promise<void> {
+  }: AMQPConnectionManagerReceiveFromQueueOptions = {}): Promise<Channel> {
     // Ensure there is an active connection. If not, retry once a connection is
     // established.
     if (!this.connection) {
-      return new Promise<void>(resolve => {
+      return new Promise<Channel>(resolve => {
         this.once(AMQPEventType.CONNECT, () => this.receiveFromQueue(queue, handler, {
           ack,
           durable,
           prefetch,
-        }).then(() => resolve()));
+        }).then(channel => resolve(channel)));
       });
     }
 
@@ -681,6 +687,8 @@ export default class AMQPConnectionManager extends EventEmitter {
     }, {
       noAck: !ack,
     });
+
+    return channel;
   }
 
   /**
@@ -715,12 +723,14 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @param exchange - Name of the exchange.
    * @param handler - Handler invoked when the message is received.
    * @param options - @see AMQPConnectionManagerListenOptions
+   *
+   * @returns The created channel.
    */
   async listen(exchange: string, handler: (payload: MessagePayload) => Promise<MessagePayload | void>, {
     ack = true,
     durable = true,
     prefetch = 0,
-  }: AMQPConnectionManagerListenOptions = {}) {
+  }: AMQPConnectionManagerListenOptions = {}): Promise<Channel> {
     return this.receiveFromExchange(exchange, async (routingKey, payload) => {
       return handler(payload);
     }, {
@@ -765,12 +775,14 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @param key - Routing key of the direct exchange.
    * @param handler - Handler invoked when the message is received.
    * @param options - @see AMQPConnectionManagerReceiveFromDirectExchangeOptions
+   *
+   * @returns The created channel.
    */
   async receiveFromDirectExchange(exchange: string, key: string, handler: (payload: MessagePayload) => Promise<MessagePayload | void>, {
     ack = true,
     durable = true,
     prefetch = 0,
-  }: AMQPConnectionManagerReceiveFromDirectExchangeOptions = {}) {
+  }: AMQPConnectionManagerReceiveFromDirectExchangeOptions = {}): Promise<Channel> {
     return this.receiveFromExchange(exchange, (routingKey, payload) => handler(payload), {
       ack,
       durable,
@@ -813,12 +825,14 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @param topic - Routing key(s) of the topic.
    * @param handler - Handler invoked when the message is received.
    * @param options - @see AMQPConnectionManagerReceiveFromTopicOptions
+   *
+   * @returns The created channel.
    */
   async receiveFromTopic(exchange: string, topic: string | string[], handler: (routingKey: string, payload: MessagePayload) => Promise<MessagePayload | void>, {
     ack = true,
     durable = true,
     prefetch = 0,
-  }: AMQPConnectionManagerReceiveFromTopicOptions = {}) {
+  }: AMQPConnectionManagerReceiveFromTopicOptions = {}): Promise<Channel> {
     return this.receiveFromExchange(exchange, handler, {
       ack,
       durable,
