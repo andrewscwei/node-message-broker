@@ -34,6 +34,18 @@ describe('message-broker', () => {
     assert(manager.isConnected());
   });
 
+  it('can send a message to a queue', async () => {
+    const consumer = new AMQPConnectionManager(process.env.MQ_HOST);
+    const publisher = new AMQPConnectionManager(process.env.MQ_HOST);
+
+    await consumer.receiveFromQueue('test-queue-1', async ({ data, error }) => {
+      assert(!error);
+      assert(data === 'foo');
+    });
+
+    await publisher.sendToQueue('test-queue-1', MessagePayloadMake('foo'));
+  });
+
   it('can pub/sub via RPC queue', async () => {
     const client = new RPCClient(process.env.MQ_HOST);
     const server = new RPCServer(process.env.MQ_HOST);

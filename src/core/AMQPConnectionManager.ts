@@ -427,6 +427,8 @@ export default class AMQPConnectionManager extends EventEmitter {
           deliveryMode: durable,
         });
 
+        debug(`[${exchange}] Sending message to exchange with key "${key}"... OK`);
+
         channel.close().then(() => resolve(correlationId));
       }
     });
@@ -567,10 +569,7 @@ export default class AMQPConnectionManager extends EventEmitter {
     debug(`[${queue}] Sending message...`);
 
     return new Promise<MessagePayload | CorrelationID>(resolve => {
-      if (replyTo === false) {
-        channel.close().then(() => resolve(correlationId));
-      }
-      else {
+      if (replyTo !== false) {
         const replyQueue = replyTo === true ? DEFAULT_REPLY_TO_QUEUE : replyTo;
 
         channel.consume(replyQueue, message => {
@@ -592,6 +591,10 @@ export default class AMQPConnectionManager extends EventEmitter {
       });
 
       debug(`[${queue}] Sending message... OK`);
+
+      if (replyTo === false) {
+        channel.close().then(() => resolve(correlationId));
+      }
     });
   }
 
@@ -652,6 +655,7 @@ export default class AMQPConnectionManager extends EventEmitter {
         }
 
         if (ack) {
+          debug(`[${queue}] Sending receipt acknowledgement to publisher...`);
           channel.ack(message);
         }
       }
