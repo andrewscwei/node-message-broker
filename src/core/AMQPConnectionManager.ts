@@ -61,6 +61,12 @@ export interface AMQPConnectionManagerReceiveFromQueueOptions {
    * before any acknowledgement was sent.
    */
   prefetch?: number;
+
+  /**
+   * Specifies whether the opened channel should be closed automatically after
+   * the message is received.
+   */
+  autoCloseChannel?: boolean;
 }
 
 export interface AMQPConnectionManagerSendToExchangeOptions {
@@ -126,6 +132,12 @@ export interface AMQPConnectionManagerReceiveFromExchangeOptions {
    * before any acknowledgement was sent.
    */
   prefetch?: number;
+
+  /**
+   * Specifies whether the opened channel should be closed automatically after
+   * the message is received.
+   */
+  autoCloseChannel?: boolean;
 }
 
 export interface AMQPConnectionManagerBroadcastOptions {
@@ -163,6 +175,12 @@ export interface AMQPConnectionManagerListenOptions {
    * before any acknowledgement was sent.
    */
   prefetch?: number;
+
+  /**
+   * Specifies whether the opened channel should be closed automatically after
+   * the message is received.
+   */
+  autoCloseChannel?: boolean;
 }
 
 export interface AMQPConnectionManagerSendToTopicOptions {
@@ -207,6 +225,12 @@ export interface AMQPConnectionManagerReceiveFromTopicOptions {
    * before any acknowledgement was sent.
    */
   prefetch?: number;
+
+  /**
+   * Specifies whether the opened channel should be closed automatically after
+   * the message is received.
+   */
+  autoCloseChannel?: boolean;
 }
 
 export interface AMQPConnectionManagerSendToDirectExchangeOptions {
@@ -251,6 +275,12 @@ export interface AMQPConnectionManagerReceiveFromDirectExchangeOptions {
    * before any acknowledgement was sent.
    */
   prefetch?: number;
+
+  /**
+   * Specifies whether the opened channel should be closed automatically after
+   * the message is received.
+   */
+  autoCloseChannel?: boolean;
 }
 
 export default class AMQPConnectionManager extends EventEmitter {
@@ -449,6 +479,7 @@ export default class AMQPConnectionManager extends EventEmitter {
     exchangeType = 'fanout',
     keys = '',
     prefetch = 0,
+    autoCloseChannel = false,
   }: AMQPConnectionManagerReceiveFromExchangeOptions = {}): Promise<Channel> {
     // Ensure there is an active connection. If not, retry once a connection is
     // established.
@@ -510,6 +541,10 @@ export default class AMQPConnectionManager extends EventEmitter {
         if (ack) {
           channel.ack(message);
         }
+
+        if (autoCloseChannel) {
+          await channel.close();
+        }
       }
       catch (err) {
         debug(`[${exchange}] Error occured while handling message for keys "${keys}": ${err.message}`);
@@ -528,6 +563,10 @@ export default class AMQPConnectionManager extends EventEmitter {
 
         if (ack) {
           channel.nack(message, false, false);
+        }
+
+        if (autoCloseChannel) {
+          await channel.close();
         }
       }
     }, {
@@ -615,6 +654,7 @@ export default class AMQPConnectionManager extends EventEmitter {
     ack = true,
     durable = true,
     prefetch = 0,
+    autoCloseChannel = false,
   }: AMQPConnectionManagerReceiveFromQueueOptions = {}): Promise<Channel> {
     // Ensure there is an active connection. If not, retry once a connection is
     // established.
@@ -664,6 +704,10 @@ export default class AMQPConnectionManager extends EventEmitter {
           debug(`[${queue}] Sending receipt acknowledgement to publisher...`);
           channel.ack(message);
         }
+
+        if (autoCloseChannel) {
+          await channel.close();
+        }
       }
       catch (err) {
         debug(`[${queue}] Error occured while handling message: ${err.message}`);
@@ -682,6 +726,10 @@ export default class AMQPConnectionManager extends EventEmitter {
 
         if (ack) {
           channel.nack(message, false, false);
+        }
+
+        if (autoCloseChannel) {
+          await channel.close();
         }
       }
     }, {
@@ -730,6 +778,7 @@ export default class AMQPConnectionManager extends EventEmitter {
     ack = true,
     durable = true,
     prefetch = 0,
+    autoCloseChannel = false,
   }: AMQPConnectionManagerListenOptions = {}): Promise<Channel> {
     return this.receiveFromExchange(exchange, async (routingKey, payload) => {
       return handler(payload);
@@ -739,6 +788,7 @@ export default class AMQPConnectionManager extends EventEmitter {
       exchangeType: 'fanout',
       keys: '',
       prefetch,
+      autoCloseChannel,
     });
   }
 
@@ -782,6 +832,7 @@ export default class AMQPConnectionManager extends EventEmitter {
     ack = true,
     durable = true,
     prefetch = 0,
+    autoCloseChannel = false,
   }: AMQPConnectionManagerReceiveFromDirectExchangeOptions = {}): Promise<Channel> {
     return this.receiveFromExchange(exchange, (routingKey, payload) => handler(payload), {
       ack,
@@ -789,6 +840,7 @@ export default class AMQPConnectionManager extends EventEmitter {
       exchangeType: 'direct',
       keys: key,
       prefetch,
+      autoCloseChannel,
     });
   }
 
@@ -832,6 +884,7 @@ export default class AMQPConnectionManager extends EventEmitter {
     ack = true,
     durable = true,
     prefetch = 0,
+    autoCloseChannel = false,
   }: AMQPConnectionManagerReceiveFromTopicOptions = {}): Promise<Channel> {
     return this.receiveFromExchange(exchange, handler, {
       ack,
@@ -839,6 +892,7 @@ export default class AMQPConnectionManager extends EventEmitter {
       exchangeType: 'topic',
       keys: topic,
       prefetch,
+      autoCloseChannel,
     });
   }
 

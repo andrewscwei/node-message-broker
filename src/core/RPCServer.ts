@@ -10,11 +10,13 @@ export default class RPCServer extends AMQPConnectionManager {
     ack = true,
     durable = true,
     prefetch = 0,
+    autoCloseChannel = false,
   }: AMQPConnectionManagerReceiveFromQueueOptions = {}): Promise<Channel> {
     return super.receiveFromQueue(queue, handler, {
       ack,
       durable,
       prefetch,
+      autoCloseChannel,
     });
   }
 
@@ -27,6 +29,7 @@ export default class RPCServer extends AMQPConnectionManager {
     exchangeType = 'fanout',
     keys = '',
     prefetch = 0,
+    autoCloseChannel = false,
   }: AMQPConnectionManagerReceiveFromExchangeOptions = {}): Promise<Channel> {
     return super.receiveFromExchange(exchange, handler, {
       ack,
@@ -34,6 +37,7 @@ export default class RPCServer extends AMQPConnectionManager {
       exchangeType,
       keys,
       prefetch,
+      autoCloseChannel,
     });
   }
 
@@ -44,11 +48,13 @@ export default class RPCServer extends AMQPConnectionManager {
     ack = true,
     durable = true,
     prefetch = 0,
+    autoCloseChannel = false,
   }: AMQPConnectionManagerReceiveFromDirectExchangeOptions = {}): Promise<Channel> {
     return super.receiveFromDirectExchange(exchange, key, handler, {
       ack,
       durable,
       prefetch,
+      autoCloseChannel,
     });
   }
 
@@ -59,11 +65,13 @@ export default class RPCServer extends AMQPConnectionManager {
     ack = true,
     durable = true,
     prefetch = 0,
+    autoCloseChannel = false,
   }: AMQPConnectionManagerReceiveFromTopicOptions = {}): Promise<Channel> {
     return super.receiveFromTopic(exchange, topic, handler, {
       ack,
       durable,
       prefetch,
+      autoCloseChannel,
     });
   }
 }
