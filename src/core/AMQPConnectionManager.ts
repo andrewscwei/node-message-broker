@@ -491,6 +491,7 @@ export default class AMQPConnectionManager extends EventEmitter {
           exchangeType,
           keys,
           prefetch,
+          autoCloseChannel,
         }).then(channel => resolve(channel)));
       });
     }
@@ -517,6 +518,11 @@ export default class AMQPConnectionManager extends EventEmitter {
     await channel.consume(queue, async message => {
       if (!message) {
         debug(`[${exchange}] No message received for keys "${keys}"`);
+
+        if (autoCloseChannel) {
+          await channel.close();
+        }
+
         return;
       }
 
@@ -541,10 +547,6 @@ export default class AMQPConnectionManager extends EventEmitter {
         if (ack) {
           channel.ack(message);
         }
-
-        if (autoCloseChannel) {
-          await channel.close();
-        }
       }
       catch (err) {
         debug(`[${exchange}] Error occured while handling message for keys "${keys}": ${err.message}`);
@@ -564,10 +566,10 @@ export default class AMQPConnectionManager extends EventEmitter {
         if (ack) {
           channel.nack(message, false, false);
         }
+      }
 
-        if (autoCloseChannel) {
-          await channel.close();
-        }
+      if (autoCloseChannel) {
+        await channel.close();
       }
     }, {
       noAck: !ack,
@@ -664,6 +666,7 @@ export default class AMQPConnectionManager extends EventEmitter {
           ack,
           durable,
           prefetch,
+          autoCloseChannel,
         }).then(channel => resolve(channel)));
       });
     }
@@ -679,6 +682,11 @@ export default class AMQPConnectionManager extends EventEmitter {
     await channel.consume(queue, async message => {
       if (!message) {
         debug(`[${queue}] No message received`);
+
+        if (autoCloseChannel) {
+          await channel.close();
+        }
+
         return;
       }
 
@@ -704,10 +712,6 @@ export default class AMQPConnectionManager extends EventEmitter {
           debug(`[${queue}] Sending receipt acknowledgement to publisher...`);
           channel.ack(message);
         }
-
-        if (autoCloseChannel) {
-          await channel.close();
-        }
       }
       catch (err) {
         debug(`[${queue}] Error occured while handling message: ${err.message}`);
@@ -727,10 +731,10 @@ export default class AMQPConnectionManager extends EventEmitter {
         if (ack) {
           channel.nack(message, false, false);
         }
+      }
 
-        if (autoCloseChannel) {
-          await channel.close();
-        }
+      if (autoCloseChannel) {
+        await channel.close();
       }
     }, {
       noAck: !ack,
