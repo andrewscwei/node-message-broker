@@ -628,7 +628,7 @@ export default class AMQPConnectionManager extends EventEmitter {
       });
     }
 
-    debug(`Listening for queue "${queue}"...`);
+    debug(`[${queue}] Listening for queue...`);
 
     const channel = await this.connection.createChannel();
 
