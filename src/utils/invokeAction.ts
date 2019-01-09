@@ -6,8 +6,8 @@ export default function invokeAction(action: ActionWithoutParams) {
 
     if (error) throw new Error(error.message);
 
-    await action();
+    const res = await action();
 
-    return MessagePayloadMake();
+    return MessagePayloadMake(res);
   };
 }
