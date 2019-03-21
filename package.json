@@ -1,6 +1,6 @@
 {
   "name": "@sybl/message-broker",
-  "version": "0.27.0",
+  "version": "0.28.0",
   "description": "Node.js message broker that helps managing AMQP connections and sending/receiving messages",
   "main": "build/index.js",
   "private": true,
@@ -28,26 +28,26 @@
   },
   "homepage": "https://github.com/sybl/node-message-broker#readme",
   "devDependencies": {
-    "@types/bson": "^1.0.11",
-    "@types/debug": "^0.0.31",
-    "@types/mocha": "^5.2.5",
+    "@types/bson": "^4.0.0",
+    "@types/debug": "^4.1.2",
+    "@types/mocha": "^5.2.6",
     "@types/parse-json": "^4.0.0",
     "@types/uuid": "^3.4.4",
-    "mocha": "^5.2.0",
-    "rimraf": "^2.6.2",
-    "ts-node": "^7.0.1",
-    "tslint": "^5.11.0",
-    "typescript": "^3.1.6"
+    "mocha": "^6.0.2",
+    "rimraf": "^2.6.3",
+    "ts-node": "^8.0.3",
+    "tslint": "^5.14.0",
+    "typescript": "^3.3.4000"
   },
   "dependencies": {
-    "@sindresorhus/is": "^0.13.0",
-    "@types/amqplib": "^0.5.9",
+    "@sindresorhus/is": "^0.15.0",
+    "@types/amqplib": "^0.5.11",
     "@types/serialize-error": "^2.1.0",
-    "amqplib": "^0.5.2",
-    "bson": "^4.0.1",
-    "debug": "^4.1.0",
+    "amqplib": "^0.5.3",
+    "bson": "^4.0.2",
+    "debug": "^4.1.1",
     "parse-json": "^4.0.0",
-    "serialize-error": "^3.0.0",
+    "serialize-error": "^4.0.0",
     "uuid": "^3.3.2"
   },
   "types": "build/index.d.ts"

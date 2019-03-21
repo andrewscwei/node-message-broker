@@ -1,5 +1,5 @@
 import is from '@sindresorhus/is';
-import amqplib, { Connection, Channel } from 'amqplib';
+import amqplib, { Channel, Connection } from 'amqplib';
 import { EventEmitter } from 'events';
 import uuid from 'uuid/v1';
 import { AMQPEventType } from '../enums';
