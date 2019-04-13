@@ -29,7 +29,7 @@ export interface AMQPConnectionManagerSendToQueueOptions {
    * Indicates whether the message should be preserved in the case that the
    * publisher dies. If this is `true`, the queue which the message is sent to
    * will be marked as durable and the message that is sent will be marked as
-   * persistent, i.e. setting `deliveryMode` to `true`.
+   * persistent, i.e. setting `persistent` to `true`.
    */
   durable?: boolean;
 
@@ -40,6 +40,13 @@ export interface AMQPConnectionManagerSendToQueueOptions {
    * the consumer.
    */
   replyTo?: string | boolean;
+
+  /**
+   * Timeout in milliseconds to throw an error when the specified time has
+   * passed whilst the channel hasn't given any response. This is only used if
+   * `replyTo` is set. Set this to `0` or `undefined` to indicate no timeout.
+   */
+  timeout?: number;
 }
 
 export interface AMQPConnectionManagerReceiveFromQueueOptions {
@@ -101,6 +108,13 @@ export interface AMQPConnectionManagerSendToExchangeOptions {
    * the consumer.
    */
   replyTo?: boolean | string;
+
+  /**
+   * Timeout in milliseconds to throw an error when the specified time has
+   * passed whilst the channel hasn't given any response. This is only used if
+   * `replyTo` is set. Set this to `0` or `undefined` to indicate no timeout.
+   */
+  timeout?: number;
 }
 
 export interface AMQPConnectionManagerReceiveFromExchangeOptions {
@@ -151,7 +165,7 @@ export interface AMQPConnectionManagerBroadcastOptions {
    * Indicates whether the message should be preserved in the case that the
    * publisher dies. If this is `true`, the queue which the message is sent to
    * will be marked as durable and the message that is sent will be marked as
-   * persistent, i.e. setting `deliveryMode` to `true`.
+   * persistent, i.e. setting `persistent` to `true`.
    */
   durable?: boolean;
 }
@@ -204,6 +218,13 @@ export interface AMQPConnectionManagerSendToTopicOptions {
    * the consumer.
    */
   replyTo?: boolean | string;
+
+  /**
+   * Timeout in milliseconds to throw an error when the specified time has
+   * passed whilst the channel hasn't given any response. This is only used if
+   * `replyTo` is set. Set this to `0` or `undefined` to indicate no timeout.
+   */
+  timeout?: number;
 }
 
 export interface AMQPConnectionManagerReceiveFromTopicOptions {
@@ -254,6 +275,14 @@ export interface AMQPConnectionManagerSendToDirectExchangeOptions {
    * the consumer.
    */
   replyTo?: boolean | string;
+
+  /**
+   * Timeout in milliseconds to throw an error when the specified time has
+   * passed whilst the channel hasn't given any response. This is only used if
+   * `durable` is `false` and `replyTo` is set. Set this to `0` or `undefined`
+   * to indicate no timeout.
+   */
+  timeout?: number;
 }
 
 export interface AMQPConnectionManagerReceiveFromDirectExchangeOptions {
@@ -401,9 +430,10 @@ export default class AMQPConnectionManager extends EventEmitter {
     exchangeType = 'fanout',
     key = '',
     replyTo = false,
+    timeout = 0,
   }: AMQPConnectionManagerSendToExchangeOptions = {}): Promise<MessagePayload | CorrelationID> {
     // Ensure there is an active connection. If not, retry once a connection is
-    // established.
+    // established if `durable` is `true`.
     if (!this.connection) {
       return new Promise<MessagePayload | CorrelationID>(resolve => {
         this.once(AMQPEventType.CONNECT, () => this.sendToExchange(exchange, payload, {
@@ -424,17 +454,37 @@ export default class AMQPConnectionManager extends EventEmitter {
 
     debug(`[${exchange}] Sending message to exchange with key "${key}"...`);
 
-    return new Promise<MessagePayload | CorrelationID>(resolve => {
+    return new Promise<MessagePayload | CorrelationID>((resolve, reject) => {
       const routingKey = exchangeType === 'fanout' ? '' : key;
       const buffer = encodePayload(payload);
 
       if (replyTo !== false) {
         const replyQueue = replyTo === true ? DEFAULT_REPLY_TO_QUEUE : replyTo;
 
+        let timer: NodeJS.Timeout | undefined;
+
+        if (timeout && (timeout > 0)) {
+          timer = setTimeout(() => {
+            debug(`[${exchange}] Receiving response in reply queue [${replyQueue}] for correlation ID ${correlationId}...`, 'ERR', 'Timed out while waiting for response from consumer');
+
+            if (timer !== undefined) {
+              clearTimeout(timer);
+              timer = undefined;
+            }
+
+            channel.close().then(() => reject(new Error('Timed out while waiting for response from consumer')));
+          }, timeout);
+        }
+
         channel.consume(replyQueue, message => {
           if (!message || (message.properties.correlationId !== correlationId)) return;
 
-          debug(`[${exchange}] Received response in reply queue [${replyQueue}] for correlation ID ${correlationId}`);
+          debug(`[${exchange}] Receiving response in reply queue [${replyQueue}] for correlation ID ${correlationId}...`, 'OK');
+
+          if (timer !== undefined) {
+            clearTimeout(timer);
+            timer = undefined;
+          }
 
           channel.close().then(() => resolve(decodePayload(message.content)));
         }, {
@@ -444,20 +494,20 @@ export default class AMQPConnectionManager extends EventEmitter {
         channel.publish(exchange, routingKey, buffer, {
           correlationId,
           contentType: 'application/json',
-          deliveryMode: durable,
+          persistent: durable,
           replyTo: replyQueue,
         });
 
-        debug(`[${exchange}] Sending message to exchange with key "${key}"... OK`);
+        debug(`[${exchange}] Sending message to exchange with key "${key}"...`, 'OK');
       }
       else {
         channel.publish(exchange, routingKey, buffer, {
           correlationId,
           contentType: 'application/json',
-          deliveryMode: durable,
+          persistent: durable,
         });
 
-        debug(`[${exchange}] Sending message to exchange with key "${key}"... OK`);
+        debug(`[${exchange}] Sending message to exchange with key "${key}"...`, 'OK');
 
         channel.close().then(() => resolve(correlationId));
       }
@@ -592,6 +642,7 @@ export default class AMQPConnectionManager extends EventEmitter {
     correlationId = createCorrelationId(),
     durable = true,
     replyTo = false,
+    timeout = 0,
   }: AMQPConnectionManagerSendToQueueOptions = {}): Promise<MessagePayload | CorrelationID> {
     // Ensure there is an active connection. If not, retry once a connection is
     // established.
@@ -613,14 +664,29 @@ export default class AMQPConnectionManager extends EventEmitter {
 
     debug(`[${queue}] Sending message...`);
 
-    return new Promise<MessagePayload | CorrelationID>(resolve => {
+    return new Promise<MessagePayload | CorrelationID>((resolve, reject) => {
       if (replyTo !== false) {
         const replyQueue = replyTo === true ? DEFAULT_REPLY_TO_QUEUE : replyTo;
+
+        let timer: NodeJS.Timeout | undefined;
+
+        if (timeout && (timeout > 0)) {
+          timer = setTimeout(() => {
+            debug(`[${queue}] Receiving response in reply queue [${replyQueue}] for correlation ID ${correlationId}...` , 'ERR', 'Timed out while waiting for response from consumer');
+
+            if (timer !== undefined) {
+              clearTimeout(timer);
+              timer = undefined;
+            }
+
+            channel.close().then(() => reject(new Error('Timed out while waiting for response from consumer')));
+          }, timeout);
+        }
 
         channel.consume(replyQueue, message => {
           if (!message || (message.properties.correlationId !== correlationId)) return;
 
-          debug(`[${queue}] Received response in reply queue [${replyQueue}] for correlation ID ${correlationId}`);
+          debug(`[${queue}] Receiving response in reply queue [${replyQueue}] for correlation ID ${correlationId}...`, 'OK');
 
           channel.close().then(() => resolve(decodePayload(message.content)));
         }, {
@@ -632,10 +698,10 @@ export default class AMQPConnectionManager extends EventEmitter {
         correlationId,
         contentType: 'application/json',
         replyTo: replyTo === false ? undefined : (replyTo === true ? DEFAULT_REPLY_TO_QUEUE : replyTo),
-        deliveryMode: durable,
+        persistent: durable,
       });
 
-      debug(`[${queue}] Sending message... OK`);
+      debug(`[${queue}] Sending message...`, 'OK');
 
       if (replyTo === false) {
         channel.close().then(() => resolve(correlationId));
@@ -810,6 +876,7 @@ export default class AMQPConnectionManager extends EventEmitter {
     correlationId = createCorrelationId(),
     durable = true,
     replyTo = false,
+    timeout = 0,
   }: AMQPConnectionManagerSendToDirectExchangeOptions = {}): Promise<MessagePayload | CorrelationID> {
     const res = await this.sendToExchange(exchange, payload, {
       correlationId,
@@ -817,6 +884,7 @@ export default class AMQPConnectionManager extends EventEmitter {
       exchangeType: 'direct',
       key,
       replyTo,
+      timeout,
     });
 
     return res;
@@ -862,6 +930,7 @@ export default class AMQPConnectionManager extends EventEmitter {
     correlationId = createCorrelationId(),
     durable = true,
     replyTo = false,
+    timeout = 0,
   }: AMQPConnectionManagerSendToTopicOptions = {}): Promise<MessagePayload | CorrelationID> {
     const res = await this.sendToExchange(exchange, payload, {
       correlationId,
@@ -869,6 +938,7 @@ export default class AMQPConnectionManager extends EventEmitter {
       exchangeType: 'topic',
       key: topic,
       replyTo,
+      timeout,
     });
 
     return res;

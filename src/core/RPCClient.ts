@@ -10,11 +10,13 @@ export default class RPCClient extends AMQPConnectionManager {
     correlationId = createCorrelationId(),
     durable = true,
     replyTo = true,
+    timeout = 10 * 1000,
   }: AMQPConnectionManagerSendToQueueOptions = {}): Promise<MessagePayload> {
     const res = await super.sendToQueue(queue, payload, {
       correlationId,
       durable,
       replyTo,
+      timeout,
     });
 
     if (!typeIsMessagePayload(res)) throw new Error('Invalid payload format');
@@ -31,6 +33,7 @@ export default class RPCClient extends AMQPConnectionManager {
     exchangeType = 'fanout',
     key = '',
     replyTo = true,
+    timeout = 10 * 1000,
   }: AMQPConnectionManagerSendToExchangeOptions = {}): Promise<MessagePayload> {
     const res = await super.sendToExchange(exchange, payload, {
       correlationId,
@@ -38,6 +41,7 @@ export default class RPCClient extends AMQPConnectionManager {
       exchangeType,
       key,
       replyTo,
+      timeout,
     });
 
     if (!typeIsMessagePayload(res)) throw new Error('Invalid payload format');
@@ -52,11 +56,13 @@ export default class RPCClient extends AMQPConnectionManager {
     correlationId = createCorrelationId(),
     durable = true,
     replyTo = true,
+    timeout = 10 * 1000,
   }: AMQPConnectionManagerSendToDirectExchangeOptions = {}): Promise<MessagePayload> {
     const res = await super.sendToDirectExchange(exchange, key, payload, {
       correlationId,
       durable,
       replyTo,
+      timeout,
     });
 
     if (!typeIsMessagePayload(res)) throw new Error('Invalid payload format');
@@ -71,11 +77,13 @@ export default class RPCClient extends AMQPConnectionManager {
     correlationId = createCorrelationId(),
     durable = true,
     replyTo = true,
+    timeout = 10 * 1000,
   }: AMQPConnectionManagerSendToTopicOptions = {}): Promise<MessagePayload> {
     const res = await super.sendToTopic(exchange, topic, payload, {
       correlationId,
       durable,
       replyTo,
+      timeout,
     });
 
     if (!typeIsMessagePayload(res)) throw new Error('Invalid payload format');
