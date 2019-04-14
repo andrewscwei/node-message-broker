@@ -10,7 +10,7 @@ export default class RPCClient extends AMQPConnectionManager {
     correlationId = createCorrelationId(),
     durable = true,
     replyTo = true,
-    timeout = 10 * 1000,
+    timeout = 0,
   }: AMQPConnectionManagerSendToQueueOptions = {}): Promise<MessagePayload> {
     const res = await super.sendToQueue(queue, payload, {
       correlationId,
@@ -33,7 +33,7 @@ export default class RPCClient extends AMQPConnectionManager {
     exchangeType = 'fanout',
     key = '',
     replyTo = true,
-    timeout = 10 * 1000,
+    timeout = 0,
   }: AMQPConnectionManagerSendToExchangeOptions = {}): Promise<MessagePayload> {
     const res = await super.sendToExchange(exchange, payload, {
       correlationId,
@@ -56,7 +56,7 @@ export default class RPCClient extends AMQPConnectionManager {
     correlationId = createCorrelationId(),
     durable = true,
     replyTo = true,
-    timeout = 10 * 1000,
+    timeout = 0,
   }: AMQPConnectionManagerSendToDirectExchangeOptions = {}): Promise<MessagePayload> {
     const res = await super.sendToDirectExchange(exchange, key, payload, {
       correlationId,
@@ -77,7 +77,7 @@ export default class RPCClient extends AMQPConnectionManager {
     correlationId = createCorrelationId(),
     durable = true,
     replyTo = true,
-    timeout = 10 * 1000,
+    timeout = 0,
   }: AMQPConnectionManagerSendToTopicOptions = {}): Promise<MessagePayload> {
     const res = await super.sendToTopic(exchange, topic, payload, {
       correlationId,

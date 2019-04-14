@@ -433,7 +433,7 @@ export default class AMQPConnectionManager extends EventEmitter {
     timeout = 0,
   }: AMQPConnectionManagerSendToExchangeOptions = {}): Promise<MessagePayload | CorrelationID> {
     // Ensure there is an active connection. If not, retry once a connection is
-    // established if `durable` is `true`.
+    // established.
     if (!this.connection) {
       return new Promise<MessagePayload | CorrelationID>(resolve => {
         this.once(AMQPEventType.CONNECT, () => this.sendToExchange(exchange, payload, {
