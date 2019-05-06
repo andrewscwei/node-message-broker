@@ -1,6 +1,6 @@
 {
   "name": "@sybl/message-broker",
-  "version": "0.30.0",
+  "version": "0.31.0",
   "description": "Node.js message broker that helps managing AMQP connections and sending/receiving messages",
   "main": "build/index.js",
   "private": true,
@@ -8,8 +8,7 @@
     "prepare": "npm run build",
     "clean": "rimraf build",
     "build": "npm run clean && tsc",
-    "test:ts": "NODE_ENV=test DEBUG=message-broker* mocha -r ts-node/register --timeout 20000 --reporter spec --full-trace --colors --recursive --bail --exit src/**/*.spec.ts",
-    "test": "NODE_ENV=test DEBUG=message-broker* mocha --timeout 20000 --reporter spec --full-trace --colors --recursive --exit $([ -z \"$npm_config_path\" ] && echo build/**/*.spec.js || echo $npm_config_path)",
+    "test": "DEBUG=message-broker* mocha --timeout 20000 --reporter spec --full-trace --colors --recursive --exit $([ -z \"$npm_config_path\" ] && echo build/**/*.spec.js || echo $npm_config_path)",
     "lint": "tslint \"src/**/*.ts\" --project tsconfig.json",
     "lint:fix": "npm run lint -- --fix",
     "ship:test": "docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit"
@@ -29,25 +28,25 @@
   "homepage": "https://github.com/sybl/node-message-broker#readme",
   "devDependencies": {
     "@types/bson": "^4.0.0",
-    "@types/debug": "^4.1.2",
+    "@types/debug": "^4.1.4",
     "@types/mocha": "^5.2.6",
     "@types/parse-json": "^4.0.0",
     "@types/uuid": "^3.4.4",
-    "mocha": "^6.0.2",
+    "mocha": "^6.1.4",
     "rimraf": "^2.6.3",
-    "ts-node": "^8.0.3",
-    "tslint": "^5.14.0",
-    "typescript": "^3.3.4000"
+    "ts-node": "^8.1.0",
+    "tslint": "^5.16.0",
+    "typescript": "^3.4.5"
   },
   "dependencies": {
-    "@sindresorhus/is": "^0.15.0",
+    "@sindresorhus/is": "^0.16.0",
     "@types/amqplib": "^0.5.11",
-    "@types/serialize-error": "^2.1.0",
+    "@types/serialize-error": "^4.0.1",
     "amqplib": "^0.5.3",
     "bson": "^4.0.2",
     "debug": "^4.1.1",
     "parse-json": "^4.0.0",
-    "serialize-error": "^4.0.0",
+    "serialize-error": "^4.1.0",
     "uuid": "^3.3.2"
   },
   "types": "build/index.d.ts"

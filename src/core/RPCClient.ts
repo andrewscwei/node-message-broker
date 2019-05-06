@@ -5,6 +5,8 @@ import AMQPConnectionManager, { AMQPConnectionManagerSendToDirectExchangeOptions
 export default class RPCClient extends AMQPConnectionManager {
   /**
    * @inheritdoc
+   *
+   * @throws {Error} Invalid payload.
    */
   async sendToQueue(queue: string, payload: MessagePayload, {
     correlationId = createCorrelationId(),
@@ -26,6 +28,8 @@ export default class RPCClient extends AMQPConnectionManager {
 
   /**
    * @inheritdoc
+   *
+   * @throws {Error} Invalid payload.
    */
   async sendToExchange(exchange: string, payload: MessagePayload = MessagePayloadMake(), {
     correlationId = createCorrelationId(),
@@ -51,6 +55,8 @@ export default class RPCClient extends AMQPConnectionManager {
 
   /**
    * @inheritdoc
+   *
+   * @throws {Error} Invalid payload.
    */
   async sendToDirectExchange(exchange: string, key: string, payload: MessagePayload = MessagePayloadMake(), {
     correlationId = createCorrelationId(),
@@ -72,6 +78,8 @@ export default class RPCClient extends AMQPConnectionManager {
 
   /**
    * @inheritdoc
+   *
+   * @throws {Error} Invalid payload.
    */
   async sendToTopic(exchange: string, topic: string, payload: MessagePayload = MessagePayloadMake(), {
     correlationId = createCorrelationId(),
