@@ -1,4 +1,4 @@
-import is from '@sindresorhus/is';
+import _ from 'lodash';
 import serializeError, { ErrorObject } from 'serialize-error';
 
 export type MessagePayload = Readonly<{
@@ -18,7 +18,7 @@ export type CorrelationID = string;
  * @returns `true` if valid, `false` otherwise.
  */
 export function typeIsMessagePayload(value: any): value is MessagePayload {
-  if (!is.plainObject(value)) return false;
+  if (!_.isPlainObject(value)) return false;
 
   const keys = Object.keys(value);
 
@@ -30,18 +30,18 @@ export function typeIsMessagePayload(value: any): value is MessagePayload {
 
   if (dataIdx < 0) return false;
   if (keys.length > 1 && errorIdx < 0) return false;
-  if ((errorIdx > -1) && !is.nullOrUndefined(value.error) && !typeIsErrorObject(value.error)) return false;
+  if ((errorIdx > -1) && !_.isNil(value.error) && !typeIsErrorObject(value.error)) return false;
 
   return true;
 }
 
 export function MessagePayloadMake(value?: any): MessagePayload {
-  if (is.nullOrUndefined(value)) {
+  if (_.isNil(value)) {
     return {
       data: null,
     };
   }
-  else if (is.error(value)) {
+  else if (_.isError(value)) {
     return {
       data: null,
       error: serializeError(value),
@@ -55,12 +55,12 @@ export function MessagePayloadMake(value?: any): MessagePayload {
 }
 
 export function typeIsCorrelationID(value: any): value is CorrelationID {
-  if (!is.string(value)) return false;
+  if (!_.isString(value)) return false;
   return true;
 }
 
 export function typeIsErrorObject(value: any): value is ErrorObject {
-  if (!is.plainObject(value)) return false;
+  if (!_.isPlainObject(value)) return false;
   if (!value.name) return false;
   if (!value.stack) return false;
   if (!value.message) return false;

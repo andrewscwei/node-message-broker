@@ -1,6 +1,6 @@
-import is from '@sindresorhus/is';
 import amqplib, { Channel, Connection } from 'amqplib';
 import { EventEmitter } from 'events';
+import _ from 'lodash';
 import uuid from 'uuid/v1';
 import { AMQPEventType } from '../enums';
 import { CorrelationID, ExchangeType, MessagePayload, MessagePayloadMake, typeIsCorrelationID, typeIsMessagePayload } from '../types';
@@ -348,7 +348,7 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @returns `true` if connected, `false` otherwise.
    */
   isConnected(): boolean {
-    return !is.nullOrUndefined(this.connection);
+    return !_.isNil(this.connection);
   }
 
   /**
@@ -561,7 +561,7 @@ export default class AMQPConnectionManager extends EventEmitter {
 
     const { queue } = await channel.assertQueue('', { exclusive: true });
 
-    if (is.string(keys)) {
+    if (_.isString(keys)) {
       await channel.bindQueue(queue, exchange, keys);
     }
     else {
