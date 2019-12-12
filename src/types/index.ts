@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import serializeError, { ErrorObject } from 'serialize-error';
+import { ErrorObject, serializeError } from 'serialize-error';
 
 export type MessagePayload = Readonly<{
   data: any;

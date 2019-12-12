@@ -1,6 +1,6 @@
 {
   "name": "@sybl/message-broker",
-  "version": "0.32.0",
+  "version": "0.33.0",
   "description": "Node.js message broker that helps managing AMQP connections and sending/receiving messages",
   "main": "build/index.js",
   "private": true,
@@ -9,8 +9,11 @@
     "clean": "rimraf build",
     "build": "npm run clean && tsc",
     "test": "DEBUG=message-broker* mocha --timeout 20000 --reporter spec --full-trace --colors --recursive --exit $([ -z \"$npm_config_path\" ] && echo build/**/*.spec.js || echo $npm_config_path)",
+    "test:ts": "DEBUG=message-broker* mocha -r ts-node/register --timeout 20000 --reporter spec --full-trace --colors --recursive --exit $([ -z \"$npm_config_path\" ] && echo src/**/*.spec.ts || echo $npm_config_path)",
     "lint": "tslint \"src/**/*.ts\" --project tsconfig.json",
     "lint:fix": "npm run lint -- --fix",
+    "mq": "docker run --name node-message-broker-mq -d --rm -p 5672:5672 rabbitmq:3.7.8-management",
+    "mq:stop": "docker stop node-message-broker-mq",
     "ship:test": "docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit"
   },
   "repository": {
@@ -27,28 +30,28 @@
   },
   "homepage": "https://github.com/sybl/node-message-broker#readme",
   "devDependencies": {
-    "@types/bson": "^4.0.0",
-    "@types/debug": "^4.1.4",
-    "@types/lodash": "^4.14.130",
-    "@types/mocha": "^5.2.6",
+    "@types/bson": "^4.0.1",
+    "@types/debug": "^4.1.5",
+    "@types/lodash": "^4.14.149",
+    "@types/mocha": "^5.2.7",
     "@types/parse-json": "^4.0.0",
-    "@types/uuid": "^3.4.4",
-    "mocha": "^6.1.4",
-    "rimraf": "^2.6.3",
-    "ts-node": "^8.1.0",
-    "tslint": "^5.16.0",
-    "typescript": "^3.4.5"
+    "@types/uuid": "^3.4.6",
+    "mocha": "^6.2.2",
+    "rimraf": "^3.0.0",
+    "ts-node": "^8.5.4",
+    "tslint": "^5.20.1",
+    "typescript": "^3.7.3"
   },
   "dependencies": {
-    "@types/amqplib": "^0.5.11",
+    "@types/amqplib": "^0.5.13",
     "@types/serialize-error": "^4.0.1",
-    "amqplib": "^0.5.3",
+    "amqplib": "^0.5.5",
     "bson": "^4.0.2",
     "debug": "^4.1.1",
-    "lodash": "^4.17.11",
-    "parse-json": "^4.0.0",
-    "serialize-error": "^4.1.0",
-    "uuid": "^3.3.2"
+    "lodash": "^4.17.15",
+    "parse-json": "^5.0.0",
+    "serialize-error": "^5.0.0",
+    "uuid": "^3.3.3"
   },
   "types": "build/index.d.ts"
 }
