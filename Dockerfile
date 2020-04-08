@@ -1,7 +1,7 @@
 ###
 # Base Node.js image.
 ##
-FROM node:12.13.1 as build-env
+FROM node:13.12.0 as build-env
 
 
 ## Build
