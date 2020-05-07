@@ -1,7 +1,7 @@
 import amqplib, { Channel, Connection } from 'amqplib';
 import { EventEmitter } from 'events';
 import _ from 'lodash';
-import uuid from 'uuid/v1';
+import { v1 as uuid } from 'uuid';
 import { AMQPEventType } from '../enums';
 import { CorrelationID, ExchangeType, MessagePayload, MessagePayloadMake, typeIsCorrelationID, typeIsMessagePayload } from '../types';
 import { createCorrelationId, decodePayload, encodePayload } from '../utils';

@@ -1,10 +1,9 @@
 {
   "name": "@sybl/message-broker",
-  "version": "0.36.0",
+  "version": "0.37.0",
   "description": "Node.js message broker that helps managing AMQP connections and sending/receiving messages",
   "main": "build/index.js",
   "scripts": {
-    "prepare": "npm run build",
     "clean": "rimraf build",
     "build": "npm run clean && tsc",
     "test": "DEBUG=message-broker* mocha --timeout 20000 --reporter spec --full-trace --colors --recursive --exit $([ -z \"$npm_config_path\" ] && echo build/**/*.spec.js || echo $npm_config_path)",
