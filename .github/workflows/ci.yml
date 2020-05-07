@@ -1,0 +1,51 @@
+name: CI
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '*.*'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    container: node:13.12.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Cache Node modules
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-node-
+      - name: Install NPM dependencies
+        run: npm install
+      - name: Build
+        run: npm run build
+      - name: Pack
+        run: |
+          PACKAGE_FILE=$(npm pack | tail -1)
+          mkdir -p package
+          mv $PACKAGE_FILE package/
+      - name: Persist package
+        uses: actions/upload-artifact@v1
+        with:
+          name: package
+          path: package
+      - name: Persist build dir
+        uses: actions/upload-artifact@v1
+        with:
+          name: build
+          path: build
+  test:
+    name: Test
+    needs: [build]
+    runs-on: ubuntu-latest
+    container: docker/compose:1.22.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Test
+        run: docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit

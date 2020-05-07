@@ -1,9 +1,8 @@
 {
   "name": "@sybl/message-broker",
-  "version": "0.34.0",
+  "version": "0.36.0",
   "description": "Node.js message broker that helps managing AMQP connections and sending/receiving messages",
   "main": "build/index.js",
-  "private": true,
   "scripts": {
     "prepare": "npm run build",
     "clean": "rimraf build",
@@ -32,14 +31,14 @@
   "devDependencies": {
     "@types/bson": "^4.0.2",
     "@types/debug": "^4.1.5",
-    "@types/lodash": "^4.14.149",
+    "@types/lodash": "^4.14.150",
     "@types/mocha": "^7.0.2",
     "@types/parse-json": "^4.0.0",
-    "@types/uuid": "^7.0.2",
-    "mocha": "^7.1.1",
+    "@types/uuid": "^7.0.3",
+    "mocha": "^7.1.2",
     "rimraf": "^3.0.2",
-    "ts-node": "^8.8.2",
-    "tslint": "^6.1.1",
+    "ts-node": "^8.10.1",
+    "tslint": "^6.1.2",
     "typescript": "^3.8.3"
   },
   "dependencies": {
@@ -51,7 +50,7 @@
     "lodash": "^4.17.15",
     "parse-json": "^5.0.0",
     "serialize-error": "^6.0.0",
-    "uuid": "^7.0.3"
+    "uuid": "^8.0.0"
   },
   "types": "build/index.d.ts"
 }
