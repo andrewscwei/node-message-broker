@@ -313,13 +313,12 @@ export interface AMQPConnectionManagerReceiveFromDirectExchangeOptions {
 }
 
 export default class AMQPConnectionManager extends EventEmitter {
+  readonly channels: Channel[] = [];
   protected connection?: Connection;
   protected isConnecting: boolean = false;
   private heartbeat: number = 3;
   private url: string = 'amqp://localhost:5672';
   private uuid: string = uuid();
-
-  get id() { return this.uuid; }
 
   /**
    * Creates a new AMQPConnectionManager instance.
@@ -340,6 +339,8 @@ export default class AMQPConnectionManager extends EventEmitter {
     // Attempt to connect right away.
     this.connect();
   }
+
+  get id() { return this.uuid; }
 
   /**
    * Checks if this AMQPConnectionManager instance is connected to the MQ
@@ -435,23 +436,9 @@ export default class AMQPConnectionManager extends EventEmitter {
     replyTo = false,
     timeout = 0,
   }: AMQPConnectionManagerSendToExchangeOptions = {}): Promise<MessagePayload | CorrelationID> {
-    // Ensure there is an active connection. If not, retry once a connection is
-    // established.
-    if (!this.connection) {
-      return new Promise<MessagePayload | CorrelationID>(resolve => {
-        this.once(AMQPEventType.CONNECT, () => this.sendToExchange(exchange, payload, {
-          correlationId,
-          durable,
-          exchangeType,
-          key,
-          replyTo,
-        }).then(res => resolve(res)));
-      });
-    }
-
     if (!typeIsMessagePayload(payload)) throw new TypeError('Invalid payload format');
 
-    const channel = await this.connection.createChannel();
+    const channel = await this.createChannel();
 
     await channel.assertExchange(exchange, exchangeType, { durable });
 
@@ -540,22 +527,7 @@ export default class AMQPConnectionManager extends EventEmitter {
     prefetch = 0,
     autoCloseChannel = false,
   }: AMQPConnectionManagerReceiveFromExchangeOptions = {}): Promise<Channel> {
-    // Ensure there is an active connection. If not, retry once a connection is
-    // established.
-    if (!this.connection) {
-      return new Promise<Channel>((resolve, reject) => {
-        this.once(AMQPEventType.CONNECT, () => this.receiveFromExchange(exchange, handler, {
-          ack,
-          durable,
-          exchangeType,
-          keys,
-          prefetch,
-          autoCloseChannel,
-        }).then(channel => resolve(channel)));
-      });
-    }
-
-    const channel = await this.connection.createChannel();
+    const channel = await this.createChannel();
 
     await channel.assertExchange(exchange, exchangeType, { durable });
 
@@ -658,21 +630,9 @@ export default class AMQPConnectionManager extends EventEmitter {
     replyTo = false,
     timeout = 0,
   }: AMQPConnectionManagerSendToQueueOptions = {}): Promise<MessagePayload | CorrelationID> {
-    // Ensure there is an active connection. If not, retry once a connection is
-    // established.
-    if (!this.connection) {
-      return new Promise<MessagePayload | CorrelationID>((resolve, reject) => {
-        this.once(AMQPEventType.CONNECT, () => this.sendToQueue(queue, payload, {
-          correlationId,
-          durable,
-          replyTo,
-        }).then(res => resolve(res)));
-      });
-    }
-
     if (!typeIsMessagePayload(payload)) throw new TypeError('Invalid payload format');
 
-    const channel = await this.connection.createChannel();
+    const channel = await this.createChannel();
 
     await channel.assertQueue(queue, { durable });
 
@@ -745,22 +705,9 @@ export default class AMQPConnectionManager extends EventEmitter {
     prefetch = 0,
     autoCloseChannel = false,
   }: AMQPConnectionManagerReceiveFromQueueOptions = {}): Promise<Channel> {
-    // Ensure there is an active connection. If not, retry once a connection is
-    // established.
-    if (!this.connection) {
-      return new Promise<Channel>(resolve => {
-        this.once(AMQPEventType.CONNECT, () => this.receiveFromQueue(queue, handler, {
-          ack,
-          durable,
-          prefetch,
-          autoCloseChannel,
-        }).then(channel => resolve(channel)));
-      });
-    }
-
     debug(`[${queue}] Listening for queue...`);
 
-    const channel = await this.connection.createChannel();
+    const channel = await this.createChannel();
 
     await channel.assertQueue(queue, { durable });
 
@@ -1028,6 +975,32 @@ export default class AMQPConnectionManager extends EventEmitter {
         resolve();
       }, this.heartbeat * 1000);
     });
+  }
+
+  /**
+   * Creates a new channel. Use this convenience method to store the channel
+   * instance internally.
+   */
+  private async createChannel(): Promise<Channel> {
+    // Ensure there is an active connection. If not, retry once a connection is
+    // established.
+    if (!this.connection) {
+      return new Promise<Channel>(resolve => {
+        this.once(AMQPEventType.CONNECT, () => this.createChannel().then(res => resolve(res)));
+      });
+    }
+
+    const channel = await this.connection.createChannel();
+    const i = this.channels.indexOf(channel);
+    if (i < 0) this.channels.push(channel);
+
+    channel.on('close', () => {
+      const j = this.channels.indexOf(channel);
+      if (j < 0) return;
+      this.channels.splice(j, 1);
+    });
+
+    return channel;
   }
 
   /**
