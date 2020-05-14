@@ -1,4 +1,3 @@
-import { Channel } from 'amqplib';
 import { MessagePayload } from '../types';
 import AMQPConnectionManager, { AMQPConnectionManagerReceiveFromDirectExchangeOptions, AMQPConnectionManagerReceiveFromExchangeOptions, AMQPConnectionManagerReceiveFromQueueOptions, AMQPConnectionManagerReceiveFromTopicOptions } from './AMQPConnectionManager';
 
@@ -10,13 +9,11 @@ export default class RPCServer extends AMQPConnectionManager {
     ack = true,
     durable = true,
     prefetch = 0,
-    autoCloseChannel = false,
-  }: AMQPConnectionManagerReceiveFromQueueOptions = {}): Promise<Channel> {
+  }: AMQPConnectionManagerReceiveFromQueueOptions = {}) {
     return super.receiveFromQueue(queue, handler, {
       ack,
       durable,
       prefetch,
-      autoCloseChannel,
     });
   }
 
@@ -29,15 +26,13 @@ export default class RPCServer extends AMQPConnectionManager {
     exchangeType = 'fanout',
     keys = '',
     prefetch = 0,
-    autoCloseChannel = false,
-  }: AMQPConnectionManagerReceiveFromExchangeOptions = {}): Promise<Channel> {
+  }: AMQPConnectionManagerReceiveFromExchangeOptions = {}) {
     return super.receiveFromExchange(exchange, handler, {
       ack,
       durable,
       exchangeType,
       keys,
       prefetch,
-      autoCloseChannel,
     });
   }
 
@@ -48,13 +43,11 @@ export default class RPCServer extends AMQPConnectionManager {
     ack = true,
     durable = true,
     prefetch = 0,
-    autoCloseChannel = false,
-  }: AMQPConnectionManagerReceiveFromDirectExchangeOptions = {}): Promise<Channel> {
+  }: AMQPConnectionManagerReceiveFromDirectExchangeOptions = {}) {
     return super.receiveFromDirectExchange(exchange, key, handler, {
       ack,
       durable,
       prefetch,
-      autoCloseChannel,
     });
   }
 
@@ -65,13 +58,11 @@ export default class RPCServer extends AMQPConnectionManager {
     ack = true,
     durable = true,
     prefetch = 0,
-    autoCloseChannel = false,
-  }: AMQPConnectionManagerReceiveFromTopicOptions = {}): Promise<Channel> {
+  }: AMQPConnectionManagerReceiveFromTopicOptions = {}) {
     return super.receiveFromTopic(exchange, topic, handler, {
       ack,
       durable,
       prefetch,
-      autoCloseChannel,
     });
   }
 }
