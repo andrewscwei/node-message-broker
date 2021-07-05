@@ -1,6 +1,6 @@
-import { MessagePayload, MessagePayloadMake, typeIsMessagePayload } from '../types';
-import { createCorrelationId } from '../utils';
-import AMQPConnectionManager, { AMQPConnectionManagerSendToDirectExchangeOptions, AMQPConnectionManagerSendToExchangeOptions, AMQPConnectionManagerSendToQueueOptions, AMQPConnectionManagerSendToTopicOptions } from './AMQPConnectionManager';
+import { MessagePayload, MessagePayloadMake, typeIsMessagePayload } from '../types'
+import { createCorrelationId } from '../utils'
+import AMQPConnectionManager, { AMQPConnectionManagerSendToDirectExchangeOptions, AMQPConnectionManagerSendToExchangeOptions, AMQPConnectionManagerSendToQueueOptions, AMQPConnectionManagerSendToTopicOptions } from './AMQPConnectionManager'
 
 export default class RPCClient extends AMQPConnectionManager {
   /**
@@ -19,11 +19,11 @@ export default class RPCClient extends AMQPConnectionManager {
       durable,
       replyTo,
       timeout,
-    });
+    })
 
-    if (!typeIsMessagePayload(res)) throw new Error('Invalid payload format');
+    if (!typeIsMessagePayload(res)) throw new Error('Invalid payload format')
 
-    return res;
+    return res
   }
 
   /**
@@ -46,11 +46,11 @@ export default class RPCClient extends AMQPConnectionManager {
       key,
       replyTo,
       timeout,
-    });
+    })
 
-    if (!typeIsMessagePayload(res)) throw new Error('Invalid payload format');
+    if (!typeIsMessagePayload(res)) throw new Error('Invalid payload format')
 
-    return res;
+    return res
   }
 
   /**
@@ -69,11 +69,11 @@ export default class RPCClient extends AMQPConnectionManager {
       durable,
       replyTo,
       timeout,
-    });
+    })
 
-    if (!typeIsMessagePayload(res)) throw new Error('Invalid payload format');
+    if (!typeIsMessagePayload(res)) throw new Error('Invalid payload format')
 
-    return res;
+    return res
   }
 
   /**
@@ -92,10 +92,10 @@ export default class RPCClient extends AMQPConnectionManager {
       durable,
       replyTo,
       timeout,
-    });
+    })
 
-    if (!typeIsMessagePayload(res)) throw new Error('Invalid payload format');
+    if (!typeIsMessagePayload(res)) throw new Error('Invalid payload format')
 
-    return res;
+    return res
   }
 }

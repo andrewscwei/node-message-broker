@@ -1,7 +1,7 @@
 ###
 # Base Node.js image.
 ##
-FROM node:13.12.0 as build-env
+FROM node:14.13.1 as build-env
 
 
 ## Build
@@ -15,7 +15,6 @@ WORKDIR /var/app
 ADD package.json /var/app/
 ADD src /var/app/src
 ADD tsconfig.json /var/app/
-ADD tslint.json /var/app/
 ADD package-lock.json /var/app/
 
 RUN npm install

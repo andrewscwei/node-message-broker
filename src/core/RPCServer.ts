@@ -1,6 +1,6 @@
-import { Channel } from 'amqplib';
-import { MessagePayload } from '../types';
-import AMQPConnectionManager, { AMQPConnectionManagerReceiveFromDirectExchangeOptions, AMQPConnectionManagerReceiveFromExchangeOptions, AMQPConnectionManagerReceiveFromQueueOptions, AMQPConnectionManagerReceiveFromTopicOptions } from './AMQPConnectionManager';
+import { Channel } from 'amqplib'
+import { MessagePayload } from '../types'
+import AMQPConnectionManager, { AMQPConnectionManagerReceiveFromDirectExchangeOptions, AMQPConnectionManagerReceiveFromExchangeOptions, AMQPConnectionManagerReceiveFromQueueOptions, AMQPConnectionManagerReceiveFromTopicOptions } from './AMQPConnectionManager'
 
 export default class RPCServer extends AMQPConnectionManager {
   /**
@@ -17,7 +17,7 @@ export default class RPCServer extends AMQPConnectionManager {
       durable,
       prefetch,
       autoCloseChannel,
-    });
+    })
   }
 
   /**
@@ -38,7 +38,7 @@ export default class RPCServer extends AMQPConnectionManager {
       keys,
       prefetch,
       autoCloseChannel,
-    });
+    })
   }
 
   /**
@@ -55,7 +55,7 @@ export default class RPCServer extends AMQPConnectionManager {
       durable,
       prefetch,
       autoCloseChannel,
-    });
+    })
   }
 
   /**
@@ -72,6 +72,6 @@ export default class RPCServer extends AMQPConnectionManager {
       durable,
       prefetch,
       autoCloseChannel,
-    });
+    })
   }
 }

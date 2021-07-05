@@ -27,4 +27,4 @@ enum AMQPEventType {
   ERROR = 'error',
 }
 
-export default AMQPEventType;
+export default AMQPEventType

@@ -1,5 +1,5 @@
-import { v1 as uuid } from 'uuid';
+import { v1 as uuid } from 'uuid'
 
 export default function createCorrelationId(): string {
-  return uuid();
+  return uuid()
 }

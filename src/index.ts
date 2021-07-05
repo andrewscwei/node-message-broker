@@ -1,37 +1,37 @@
-import AMQPConnectionManager, { AMQPConnectionManagerOptions } from './core/AMQPConnectionManager';
-import RPCClient from './core/RPCClient';
-import RPCServer from './core/RPCServer';
+import AMQPConnectionManager, { AMQPConnectionManagerOptions } from './core/AMQPConnectionManager'
+import RPCClient from './core/RPCClient'
+import RPCServer from './core/RPCServer'
 
-const debug = require('debug')('message-broker');
+const debug = require('debug')('message-broker')
 
 export interface Configuration extends AMQPConnectionManagerOptions {
-  host: string;
+  host: string
 }
 
 /**
  * Global mq configuration options (only if you are using default managers).
  */
-let config: Configuration;
+let config: Configuration
 
 /**
  * Default publisher instance.
  */
-let publisher: AMQPConnectionManager;
+let publisher: AMQPConnectionManager
 
 /**
  * Default consumer instance.
  */
-let consumer: AMQPConnectionManager;
+let consumer: AMQPConnectionManager
 
 /**
  * Default RPC client instance.
  */
-let rpcClient: RPCClient;
+let rpcClient: RPCClient
 
 /**
  * Default RPC server instance.
  */
-let rpcServer: RPCServer;
+let rpcServer: RPCServer
 
 /**
  * Configures the message broker (only if you are using default managers).
@@ -40,11 +40,11 @@ let rpcServer: RPCServer;
  */
 export function configureMb(options: Configuration) {
   if (!config) {
-    config = options;
-    debug('Configured message broker', JSON.stringify(options, undefined, 0));
+    config = options
+    debug('Configured message broker', JSON.stringify(options, undefined, 0))
   }
   else {
-    debug('You only need to configure the message broker once');
+    debug('You only need to configure the message broker once')
   }
 }
 
@@ -55,9 +55,9 @@ export function configureMb(options: Configuration) {
  * @param options - @see AMQPConnectionManagerOptions
  */
 export default function factory(): AMQPConnectionManager {
-  if (!config) throw new Error('You must call #configureMb before using this method');
-  const { host, ...options } = config;
-  return new AMQPConnectionManager(host, options);
+  if (!config) throw new Error('You must call #configureMb before using this method')
+  const { host, ...options } = config
+  return new AMQPConnectionManager(host, options)
 }
 
 /**
@@ -66,8 +66,8 @@ export default function factory(): AMQPConnectionManager {
  * @returns The default publisher instance.
  */
 export function getDefaultPublisher(): AMQPConnectionManager {
-  if (!publisher) publisher = factory();
-  return publisher;
+  if (!publisher) publisher = factory()
+  return publisher
 }
 
 /**
@@ -76,8 +76,8 @@ export function getDefaultPublisher(): AMQPConnectionManager {
  * @returns The default consumer instance.
  */
 export function getDefaultConsumer(): AMQPConnectionManager {
-  if (!consumer) consumer = factory();
-  return consumer;
+  if (!consumer) consumer = factory()
+  return consumer
 }
 
 /**
@@ -86,10 +86,10 @@ export function getDefaultConsumer(): AMQPConnectionManager {
  * @returns The default RPC client instance.
  */
 export function getDefaultRPCClient(): RPCClient {
-  if (!config) throw new Error('You must call #configureMb before using this method');
-  const { host, ...options } = config;
-  if (!rpcClient) rpcClient = new RPCClient(host, options);
-  return rpcClient;
+  if (!config) throw new Error('You must call #configureMb before using this method')
+  const { host, ...options } = config
+  if (!rpcClient) rpcClient = new RPCClient(host, options)
+  return rpcClient
 }
 
 /**
@@ -98,13 +98,13 @@ export function getDefaultRPCClient(): RPCClient {
  * @returns The default RPC server instance.
  */
 export function getDefaultRPCServer(): RPCServer {
-  if (!config) throw new Error('You must call #configureMb before using this method');
-  const { host, ...options } = config;
-  if (!rpcServer) rpcServer = new RPCServer(host, options);
-  return rpcServer;
+  if (!config) throw new Error('You must call #configureMb before using this method')
+  const { host, ...options } = config
+  if (!rpcServer) rpcServer = new RPCServer(host, options)
+  return rpcServer
 }
 
-export * from './enums';
-export * from './types';
-export * from './utils';
-export { AMQPConnectionManager, AMQPConnectionManagerOptions, RPCServer, RPCClient };
+export * from './enums'
+export * from './types'
+export * from './utils'
+export { AMQPConnectionManager, AMQPConnectionManagerOptions, RPCServer, RPCClient }

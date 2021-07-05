@@ -1,4 +1,4 @@
-import { ActionWithoutParams, MessagePayload, MessagePayloadMake } from '../types';
+import { ActionWithoutParams, MessagePayload, MessagePayloadMake } from '../types'
 
 /**
  * Maps an action to a function that can be used by consumers to handle incoming
@@ -17,17 +17,17 @@ import { ActionWithoutParams, MessagePayload, MessagePayloadMake } from '../type
 export default function invokeAction(action: ActionWithoutParams, errorHandler?: (_: Error) => void) {
   return async (payload: MessagePayload) => {
     try {
-      const { data, error } = payload;
+      const { error } = payload
 
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(error.message)
 
-      const res = await action();
+      const res = await action()
 
-      return MessagePayloadMake(res);
+      return MessagePayloadMake(res)
     }
     catch (err) {
-      errorHandler?.(err);
-      throw err;
+      errorHandler?.(err)
+      throw err
     }
-  };
+  }
 }

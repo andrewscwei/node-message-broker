@@ -1,4 +1,4 @@
-import { ActionWithParams, MessagePayload, MessagePayloadMake } from '../types';
+import { ActionWithParams, MessagePayload, MessagePayloadMake } from '../types'
 
 /**
  * Maps an action to a function that can be used by consumers to handle incoming
@@ -17,21 +17,21 @@ import { ActionWithParams, MessagePayload, MessagePayloadMake } from '../types';
  * @throws {Error} The message received from the publisher contains an error
  *                 in its payload.
  */
-export default function invokeActionWithRoutingKeyAndPayload<T extends { [key: string]: any } = {}>(action: ActionWithParams<T>, parser?: (routingKey: string, payload: MessagePayload) => T | Promise<T>, errorHandler?: (_: Error) => void) {
+export default function invokeActionWithRoutingKeyAndPayload<T extends { [key: string]: any }>(action: ActionWithParams<T>, parser?: (routingKey: string, payload: MessagePayload) => T | Promise<T>, errorHandler?: (_: Error) => void) {
   return async (routingKey: string, payload: MessagePayload) => {
     try {
-      const { data, error } = payload;
+      const { data, error } = payload
 
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(error.message)
 
-      const params = parser ? await parser(routingKey, { data }) : { ...data };
-      const res = await action(params);
+      const params = parser ? await parser(routingKey, { data }) : { ...data }
+      const res = await action(params)
 
-      return MessagePayloadMake(res);
+      return MessagePayloadMake(res)
     }
     catch (err) {
-      errorHandler?.(err);
-      throw err;
+      errorHandler?.(err)
+      throw err
     }
-  };
+  }
 }

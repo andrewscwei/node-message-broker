@@ -1,21 +1,21 @@
-import amqplib, { Channel, Connection } from 'amqplib';
-import { EventEmitter } from 'events';
-import _ from 'lodash';
-import { v1 as uuid } from 'uuid';
-import { AMQPEventType } from '../enums';
-import { CorrelationID, ExchangeType, MessagePayload, MessagePayloadMake, typeIsCorrelationID, typeIsMessagePayload } from '../types';
-import { createCorrelationId, decodePayload, encodePayload } from '../utils';
+import amqplib, { Channel, Connection } from 'amqplib'
+import { EventEmitter } from 'events'
+import _ from 'lodash'
+import { v1 as uuid } from 'uuid'
+import { AMQPEventType } from '../enums'
+import { CorrelationID, ExchangeType, MessagePayload, MessagePayloadMake, typeIsCorrelationID, typeIsMessagePayload } from '../types'
+import { createCorrelationId, decodePayload, encodePayload } from '../utils'
 
-const debug = require('debug')('message-broker');
+const debug = require('debug')('message-broker')
 
-const DEFAULT_REPLY_TO_QUEUE = 'amq.rabbitmq.reply-to';
+const DEFAULT_REPLY_TO_QUEUE = 'amq.rabbitmq.reply-to'
 
 export interface AMQPConnectionManagerOptions {
   /**
    * Time in seconds to wait before attempting to auto-reconnect whenever the
    * connection is lost. Specify 0 to never auto-reconnect.
    */
-  heartbeat?: number;
+  heartbeat?: number
 }
 
 export interface AMQPConnectionManagerSendToQueueOptions {
@@ -23,7 +23,7 @@ export interface AMQPConnectionManagerSendToQueueOptions {
    * Correlation ID of this message. If none provided, a random one will be
    * generated.
    */
-  correlationId?: string;
+  correlationId?: string
 
   /**
    * Indicates whether the message should be preserved in the case that the
@@ -31,7 +31,7 @@ export interface AMQPConnectionManagerSendToQueueOptions {
    * will be marked as durable and the message that is sent will be marked as
    * persistent, i.e. setting `persistent` to `true`.
    */
-  durable?: boolean;
+  durable?: boolean
 
   /**
    * Indicates the name of the queue on which the publisher is expecting a
@@ -39,21 +39,21 @@ export interface AMQPConnectionManagerSendToQueueOptions {
    * the default reply-to queue. If set to `false`, no reply is expected from
    * the consumer.
    */
-  replyTo?: string | boolean;
+  replyTo?: string | boolean
 
   /**
    * Timeout in milliseconds to throw an error when the specified time has
    * passed whilst the channel hasn't given any response. This is only used if
    * `replyTo` is set. Set this to `0` or `undefined` to indicate no timeout.
    */
-  timeout?: number;
+  timeout?: number
 }
 
 export interface AMQPConnectionManagerReceiveFromQueueOptions {
   /**
    * Indicates whether the sent message should be acknowledged when consumed.
    */
-  ack?: boolean;
+  ack?: boolean
 
   /**
    * Indicates whether the queue which the publisher sent its messages to is
@@ -61,19 +61,19 @@ export interface AMQPConnectionManagerReceiveFromQueueOptions {
    * created or destroyed for whatever reason, the consumer can recreate the
    * queue with the same properties.
    */
-  durable?: boolean;
+  durable?: boolean
 
   /**
    * Determines how many messages this consumer can receive on the same queue
    * before any acknowledgement was sent.
    */
-  prefetch?: number;
+  prefetch?: number
 
   /**
    * Specifies whether the opened channel should be closed automatically after
    * the message is received.
    */
-  autoCloseChannel?: boolean;
+  autoCloseChannel?: boolean
 }
 
 export interface AMQPConnectionManagerSendToExchangeOptions {
@@ -81,25 +81,25 @@ export interface AMQPConnectionManagerSendToExchangeOptions {
    * Correlation ID of this message. If none provided, a random one will be
    * generated.
    */
-  correlationId?: string;
+  correlationId?: string
 
   /**
    * Indicates whether the message should be preserved in the case that the
    * publisher dies. If this is `true`, the queue which the message is sent to
    * will be marked as durable.
    */
-  durable?: boolean;
+  durable?: boolean
 
   /**
    * Specifies the exchange type.
    */
-  exchangeType?: ExchangeType;
+  exchangeType?: ExchangeType
 
   /**
    * Indicates the routing key of the exchange to publish to. Note that this
    * value does nothing if the exchange type is set to `fanout`.
    */
-  key?: string;
+  key?: string
 
   /**
    * Indicates the name of the queue on which the publisher is expecting a
@@ -107,21 +107,21 @@ export interface AMQPConnectionManagerSendToExchangeOptions {
    * the default reply-to queue. If set to `false`, no reply is expected from
    * the consumer.
    */
-  replyTo?: boolean | string;
+  replyTo?: boolean | string
 
   /**
    * Timeout in milliseconds to throw an error when the specified time has
    * passed whilst the channel hasn't given any response. This is only used if
    * `replyTo` is set. Set this to `0` or `undefined` to indicate no timeout.
    */
-  timeout?: number;
+  timeout?: number
 }
 
 export interface AMQPConnectionManagerReceiveFromExchangeOptions {
   /**
    * Indicates whether the sent message should be acknowledged when consumed.
    */
-  ack?: boolean;
+  ack?: boolean
 
   /**
    * Indicates whether the queue which the publisher sent its messages to is
@@ -129,29 +129,29 @@ export interface AMQPConnectionManagerReceiveFromExchangeOptions {
    * created or destroyed for whatever reason, the consumer can recreate the
    * queue with the same properties.
    */
-  durable?: boolean;
+  durable?: boolean
 
   /**
    * Specifies the exchange type.
    */
-  exchangeType?: ExchangeType;
+  exchangeType?: ExchangeType
 
   /**
    * Indicates the routing key(s) of the exchange to subscribe to.
    */
-  keys?: string | string[];
+  keys?: string | string[]
 
   /**
    * Determines how many messages this consumer can receive on the same queue
    * before any acknowledgement was sent.
    */
-  prefetch?: number;
+  prefetch?: number
 
   /**
    * Specifies whether the opened channel should be closed automatically after
    * the message is received.
    */
-  autoCloseChannel?: boolean;
+  autoCloseChannel?: boolean
 }
 
 export interface AMQPConnectionManagerBroadcastOptions {
@@ -159,7 +159,7 @@ export interface AMQPConnectionManagerBroadcastOptions {
    * Correlation ID of this message. If none provided, a random one will be
    * generated.
    */
-  correlationId?: string;
+  correlationId?: string
 
   /**
    * Indicates whether the message should be preserved in the case that the
@@ -167,14 +167,14 @@ export interface AMQPConnectionManagerBroadcastOptions {
    * will be marked as durable and the message that is sent will be marked as
    * persistent, i.e. setting `persistent` to `true`.
    */
-  durable?: boolean;
+  durable?: boolean
 }
 
 export interface AMQPConnectionManagerListenOptions {
   /**
    * Indicates whether the sent message should be acknowledged when consumed.
    */
-  ack?: boolean;
+  ack?: boolean
 
   /**
    * Indicates whether the queue which the publisher sent its messages to is
@@ -182,19 +182,19 @@ export interface AMQPConnectionManagerListenOptions {
    * created or destroyed for whatever reason, the consumer can recreate the
    * queue with the same properties.
    */
-  durable?: boolean;
+  durable?: boolean
 
   /**
    * Determines how many messages this consumer can receive on the same queue
    * before any acknowledgement was sent.
    */
-  prefetch?: number;
+  prefetch?: number
 
   /**
    * Specifies whether the opened channel should be closed automatically after
    * the message is received.
    */
-  autoCloseChannel?: boolean;
+  autoCloseChannel?: boolean
 }
 
 export interface AMQPConnectionManagerSendToTopicOptions {
@@ -202,14 +202,14 @@ export interface AMQPConnectionManagerSendToTopicOptions {
    * Correlation ID of this message. If none provided, a random one will be
    * generated.
    */
-  correlationId?: string;
+  correlationId?: string
 
   /**
    * Indicates whether the message should be preserved in the case that the
    * publisher dies. If this is `true`, the queue which the message is sent to
    * will be marked as durable.
    */
-  durable?: boolean;
+  durable?: boolean
 
   /**
    * Indicates the name of the queue on which the publisher is expecting a
@@ -217,21 +217,21 @@ export interface AMQPConnectionManagerSendToTopicOptions {
    * the default reply-to queue. If set to `false`, no reply is expected from
    * the consumer.
    */
-  replyTo?: boolean | string;
+  replyTo?: boolean | string
 
   /**
    * Timeout in milliseconds to throw an error when the specified time has
    * passed whilst the channel hasn't given any response. This is only used if
    * `replyTo` is set. Set this to `0` or `undefined` to indicate no timeout.
    */
-  timeout?: number;
+  timeout?: number
 }
 
 export interface AMQPConnectionManagerReceiveFromTopicOptions {
   /**
    * Indicates whether the sent message should be acknowledged when consumed.
    */
-  ack?: boolean;
+  ack?: boolean
 
   /**
    * Indicates whether the queue which the publisher sent its messages to is
@@ -239,19 +239,19 @@ export interface AMQPConnectionManagerReceiveFromTopicOptions {
    * created or destroyed for whatever reason, the consumer can recreate the
    * queue with the same properties.
    */
-  durable?: boolean;
+  durable?: boolean
 
   /**
    * Determines how many messages this consumer can receive on the same queue
    * before any acknowledgement was sent.
    */
-  prefetch?: number;
+  prefetch?: number
 
   /**
    * Specifies whether the opened channel should be closed automatically after
    * the message is received.
    */
-  autoCloseChannel?: boolean;
+  autoCloseChannel?: boolean
 }
 
 export interface AMQPConnectionManagerSendToDirectExchangeOptions {
@@ -259,14 +259,14 @@ export interface AMQPConnectionManagerSendToDirectExchangeOptions {
    * Correlation ID of this message. If none provided, a random one will be
    * generated.
    */
-  correlationId?: string;
+  correlationId?: string
 
   /**
    * Indicates whether the message should be preserved in the case that the
    * publisher dies. If this is `true`, the queue which the message is sent to
    * will be marked as durable.
    */
-  durable?: boolean;
+  durable?: boolean
 
   /**
    * Indicates the name of the queue on which the publisher is expecting a
@@ -274,7 +274,7 @@ export interface AMQPConnectionManagerSendToDirectExchangeOptions {
    * the default reply-to queue. If set to `false`, no reply is expected from
    * the consumer.
    */
-  replyTo?: boolean | string;
+  replyTo?: boolean | string
 
   /**
    * Timeout in milliseconds to throw an error when the specified time has
@@ -282,14 +282,14 @@ export interface AMQPConnectionManagerSendToDirectExchangeOptions {
    * `durable` is `false` and `replyTo` is set. Set this to `0` or `undefined`
    * to indicate no timeout.
    */
-  timeout?: number;
+  timeout?: number
 }
 
 export interface AMQPConnectionManagerReceiveFromDirectExchangeOptions {
   /**
    * Indicates whether the sent message should be acknowledged when consumed.
    */
-  ack?: boolean;
+  ack?: boolean
 
   /**
    * Indicates whether the queue which the publisher sent its messages to is
@@ -297,28 +297,28 @@ export interface AMQPConnectionManagerReceiveFromDirectExchangeOptions {
    * created or destroyed for whatever reason, the consumer can recreate the
    * queue with the same properties.
    */
-  durable?: boolean;
+  durable?: boolean
 
   /**
    * Determines how many messages this consumer can receive on the same queue
    * before any acknowledgement was sent.
    */
-  prefetch?: number;
+  prefetch?: number
 
   /**
    * Specifies whether the opened channel should be closed automatically after
    * the message is received.
    */
-  autoCloseChannel?: boolean;
+  autoCloseChannel?: boolean
 }
 
 export default class AMQPConnectionManager extends EventEmitter {
-  readonly channels: Channel[] = [];
-  protected connection?: Connection;
-  protected isConnecting: boolean = false;
-  private heartbeat: number = 3;
-  private url: string = 'amqp://localhost:5672';
-  private uuid: string = uuid();
+  readonly channels: Channel[] = []
+  protected connection?: Connection
+  protected isConnecting = false
+  private heartbeat = 3
+  private url = 'amqp://localhost:5672'
+  private uuid: string = uuid()
 
   /**
    * Creates a new AMQPConnectionManager instance.
@@ -329,18 +329,18 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @returns A new AMQPConnectionManager instance.
    */
   constructor(url?: string, options: AMQPConnectionManagerOptions = {}) {
-    super();
+    super()
 
-    if (url) this.url = `amqp://${url}`;
-    if (options.heartbeat) this.heartbeat = options.heartbeat;
+    if (url) this.url = `amqp://${url}`
+    if (options.heartbeat) this.heartbeat = options.heartbeat
 
-    debug(`Instantiating a new AMQPConnectionManager <${this.id}>`);
+    debug(`Instantiating a new AMQPConnectionManager <${this.id}>`)
 
     // Attempt to connect right away.
-    this.connect();
+    this.connect()
   }
 
-  get id() { return this.uuid; }
+  get id() { return this.uuid }
 
   /**
    * Checks if this AMQPConnectionManager instance is connected to the MQ
@@ -349,7 +349,7 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @returns `true` if connected, `false` otherwise.
    */
   isConnected(): boolean {
-    return !_.isNil(this.connection);
+    return !_.isNil(this.connection)
   }
 
   /**
@@ -358,45 +358,45 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @returns The connection instance.
    */
   async connect(): Promise<Connection> {
-    if (this.connection) return this.connection;
+    if (this.connection) return this.connection
 
     if (this.isConnecting) {
-      await new Promise((resolve, reject) => {
+      await new Promise<void>((resolve, reject) => {
         this.once(AMQPEventType.CONNECT, () => {
-          resolve();
-        });
-      });
+          resolve()
+        })
+      })
 
-      return this.connect();
+      return this.connect()
     }
 
-    debug(`<${this.id}> is connecting to ${this.url}...`);
+    debug(`<${this.id}> is connecting to ${this.url}...`)
 
-    this.isConnecting = true;
+    this.isConnecting = true
 
     try {
-      this.connection = await amqplib.connect(this.url);
+      this.connection = await amqplib.connect(this.url)
 
-      debug(`<${this.id}> connected successfully`);
+      debug(`<${this.id}> connected successfully`)
 
-      this.isConnecting = false;
+      this.isConnecting = false
 
-      this.emit(AMQPEventType.CONNECT);
+      this.emit(AMQPEventType.CONNECT)
 
-      this.connection.on('blocked', this.onConnectionBlocked);
-      this.connection.on('unblocked', this.onConnectionUnblocked);
-      this.connection.on('close', this.onConnectionClose);
-      this.connection.on('error', this.onConnectionError);
+      this.connection.on('blocked', this.onConnectionBlocked)
+      this.connection.on('unblocked', this.onConnectionUnblocked)
+      this.connection.on('close', this.onConnectionClose)
+      this.connection.on('error', this.onConnectionError)
 
-      return this.connection;
+      return this.connection
     }
     catch (err) {
-      debug(`Unable to connect to ${this.url}, retrying in ${this.heartbeat}s`);
+      debug(`Unable to connect to ${this.url}, retrying in ${this.heartbeat}s`)
 
-      this.isConnecting = false;
+      this.isConnecting = false
 
-      await this.pulse();
-      return this.connect();
+      await this.pulse()
+      return this.connect()
     }
   }
 
@@ -405,13 +405,13 @@ export default class AMQPConnectionManager extends EventEmitter {
    */
   async disconnect() {
     if (this.connection) {
-      this.connection.close();
+      this.connection.close()
 
-      await new Promise((resolve, reject) => {
+      await new Promise<void>((resolve, reject) => {
         this.once(AMQPEventType.DISCONNECT, () => {
-          resolve();
-        });
-      });
+          resolve()
+        })
+      })
     }
   }
 
@@ -436,72 +436,72 @@ export default class AMQPConnectionManager extends EventEmitter {
     replyTo = false,
     timeout = 0,
   }: AMQPConnectionManagerSendToExchangeOptions = {}): Promise<MessagePayload | CorrelationID> {
-    if (!typeIsMessagePayload(payload)) throw new TypeError('Invalid payload format');
+    if (!typeIsMessagePayload(payload)) throw new TypeError('Invalid payload format')
 
-    const channel = await this.createChannel();
+    const channel = await this.createChannel()
 
-    await channel.assertExchange(exchange, exchangeType, { durable });
+    await channel.assertExchange(exchange, exchangeType, { durable })
 
-    debug(`[${exchange}] Sending message to exchange with key "${key}"...`);
+    debug(`[${exchange}] Sending message to exchange with key "${key}"...`)
 
     return new Promise<MessagePayload | CorrelationID>((resolve, reject) => {
-      const routingKey = exchangeType === 'fanout' ? '' : key;
-      const buffer = encodePayload(payload);
+      const routingKey = exchangeType === 'fanout' ? '' : key
+      const buffer = encodePayload(payload)
 
       if (replyTo !== false) {
-        const replyQueue = replyTo === true ? DEFAULT_REPLY_TO_QUEUE : replyTo;
+        const replyQueue = replyTo === true ? DEFAULT_REPLY_TO_QUEUE : replyTo
 
-        let timer: NodeJS.Timeout | undefined;
+        let timer: NodeJS.Timeout | undefined
 
         if (timeout && (timeout > 0)) {
           timer = setTimeout(() => {
-            debug(`[${exchange}] Receiving response in reply queue [${replyQueue}] for correlation ID ${correlationId}...`, 'ERR', 'Timed out while waiting for response from consumer');
+            debug(`[${exchange}] Receiving response in reply queue [${replyQueue}] for correlation ID ${correlationId}...`, 'ERR', 'Timed out while waiting for response from consumer')
 
             if (timer !== undefined) {
-              clearTimeout(timer);
-              timer = undefined;
+              clearTimeout(timer)
+              timer = undefined
             }
 
-            channel.close().then(() => reject(new Error('Timed out while waiting for response from consumer')));
-          }, timeout);
+            channel.close().then(() => reject(new Error('Timed out while waiting for response from consumer')))
+          }, timeout)
         }
 
         channel.consume(replyQueue, message => {
-          if (!message || (message.properties.correlationId !== correlationId)) return;
+          if (!message || (message.properties.correlationId !== correlationId)) return
 
-          debug(`[${exchange}] Receiving response in reply queue [${replyQueue}] for correlation ID ${correlationId}...`, 'OK');
+          debug(`[${exchange}] Receiving response in reply queue [${replyQueue}] for correlation ID ${correlationId}...`, 'OK')
 
           if (timer !== undefined) {
-            clearTimeout(timer);
-            timer = undefined;
+            clearTimeout(timer)
+            timer = undefined
           }
 
-          channel.close().then(() => resolve(decodePayload(message.content)));
+          channel.close().then(() => resolve(decodePayload(message.content)))
         }, {
           noAck: true,
-        });
+        })
 
         channel.publish(exchange, routingKey, buffer, {
           correlationId,
           contentType: 'application/json',
           persistent: durable,
           replyTo: replyQueue,
-        });
+        })
 
-        debug(`[${exchange}] Sending message to exchange with key "${key}"...`, 'OK');
+        debug(`[${exchange}] Sending message to exchange with key "${key}"...`, 'OK')
       }
       else {
         channel.publish(exchange, routingKey, buffer, {
           correlationId,
           contentType: 'application/json',
           persistent: durable,
-        });
+        })
 
-        debug(`[${exchange}] Sending message to exchange with key "${key}"...`, 'OK');
+        debug(`[${exchange}] Sending message to exchange with key "${key}"...`, 'OK')
 
-        channel.close().then(() => resolve(correlationId));
+        channel.close().then(() => resolve(correlationId))
       }
-    });
+    })
   }
 
   /**
@@ -527,88 +527,88 @@ export default class AMQPConnectionManager extends EventEmitter {
     prefetch = 0,
     autoCloseChannel = false,
   }: AMQPConnectionManagerReceiveFromExchangeOptions = {}): Promise<Channel> {
-    const channel = await this.createChannel();
+    const channel = await this.createChannel()
 
-    await channel.assertExchange(exchange, exchangeType, { durable });
+    await channel.assertExchange(exchange, exchangeType, { durable })
 
-    const { queue } = await channel.assertQueue('', { exclusive: true });
+    const { queue } = await channel.assertQueue('', { exclusive: true })
 
     if (_.isString(keys)) {
-      await channel.bindQueue(queue, exchange, keys);
+      await channel.bindQueue(queue, exchange, keys)
     }
     else {
       for (const key of keys) {
-        await channel.bindQueue(queue, exchange, key);
+        await channel.bindQueue(queue, exchange, key)
       }
     }
 
-    debug(`[${exchange}] Listening for exchange with keys "${keys}"...`);
+    debug(`[${exchange}] Listening for exchange with keys "${keys}"...`)
 
-    channel.prefetch(prefetch);
+    channel.prefetch(prefetch)
 
     await channel.consume(queue, async message => {
       if (!message) {
-        debug(`[${exchange}] No message received for keys "${keys}"`);
+        debug(`[${exchange}] No message received for keys "${keys}"`)
 
         if (autoCloseChannel) {
-          await channel.close();
+          await channel.close()
         }
 
-        return;
+        return
       }
 
-      debug(`[${exchange}] Received message from publisher for keys "${keys}"`);
+      debug(`[${exchange}] Received message from publisher for keys "${keys}"`)
 
       try {
         if (message.properties.contentType !== 'application/json') {
-          throw new TypeError('The message content type must be of JSON format');
+          throw new TypeError('The message content type must be of JSON format')
         }
 
-        const payload = await handler(message.fields.routingKey, decodePayload(message.content));
+        const payload = await handler(message.fields.routingKey, decodePayload(message.content))
 
         if (message.properties.replyTo) {
-          debug(`[${exchange}] Sending success response to publisher for keys "${keys}"...`);
+          debug(`[${exchange}] Sending success response to publisher for keys "${keys}"...`)
 
           channel.sendToQueue(message.properties.replyTo, encodePayload(payload || MessagePayloadMake()), {
             correlationId: message.properties.correlationId,
             contentType: 'application/json',
-          });
+          })
         }
 
         if (ack) {
-          channel.ack(message);
+          channel.ack(message)
         }
       }
       catch (err) {
-        debug(`[${exchange}] Error occured while handling message for keys "${keys}": ${err.message}`);
+        debug(`[${exchange}] Error occured while handling message for keys "${keys}": ${err.message}`)
 
         if (message.properties.replyTo) {
-          /* tslint:disable-next-line no-console */
-          console.error(err.stack);
+          /* eslint-disable-next-line no-console */
+          console.error(err.stack)
 
-          debug(`[${exchange}] Sending error response to publisher for keys "${keys}"...`);
+          debug(`[${exchange}] Sending error response to publisher for keys "${keys}"...`)
 
           channel.sendToQueue(message.properties.replyTo, encodePayload(MessagePayloadMake(err)), {
             correlationId: message.properties.correlationId,
             contentType: 'application/json',
-          });
+          })
 
-          if (ack) channel.nack(message, false, false);
+          if (ack) channel.nack(message, false, false)
         }
         else {
-          if (ack) channel.nack(message, false, false);
-          throw err;
+          if (ack) channel.nack(message, false, false)
+          throw err
         }
       }
 
       if (autoCloseChannel) {
-        await channel.close();
+        await channel.close()
       }
     }, {
       noAck: !ack,
-    });
+    })
 
-    return channel;
+    return channel
   }
 
   /**
@@ -630,42 +630,42 @@ export default class AMQPConnectionManager extends EventEmitter {
     replyTo = false,
     timeout = 0,
   }: AMQPConnectionManagerSendToQueueOptions = {}): Promise<MessagePayload | CorrelationID> {
-    if (!typeIsMessagePayload(payload)) throw new TypeError('Invalid payload format');
+    if (!typeIsMessagePayload(payload)) throw new TypeError('Invalid payload format')
 
-    const channel = await this.createChannel();
+    const channel = await this.createChannel()
 
-    await channel.assertQueue(queue, { durable });
+    await channel.assertQueue(queue, { durable })
 
-    debug(`[${queue}] Sending message...`);
+    debug(`[${queue}] Sending message...`)
 
     return new Promise<MessagePayload | CorrelationID>((resolve, reject) => {
       if (replyTo !== false) {
-        const replyQueue = replyTo === true ? DEFAULT_REPLY_TO_QUEUE : replyTo;
+        const replyQueue = replyTo === true ? DEFAULT_REPLY_TO_QUEUE : replyTo
 
-        let timer: NodeJS.Timeout | undefined;
+        let timer: NodeJS.Timeout | undefined
 
         if (timeout && (timeout > 0)) {
           timer = setTimeout(() => {
-            debug(`[${queue}] Receiving response in reply queue [${replyQueue}] for correlation ID ${correlationId}...` , 'ERR', 'Timed out while waiting for response from consumer');
+            debug(`[${queue}] Receiving response in reply queue [${replyQueue}] for correlation ID ${correlationId}...`, 'ERR', 'Timed out while waiting for response from consumer')
 
             if (timer !== undefined) {
-              clearTimeout(timer);
-              timer = undefined;
+              clearTimeout(timer)
+              timer = undefined
             }
 
-            channel.close().then(() => reject(new Error('Timed out while waiting for response from consumer')));
-          }, timeout);
+            channel.close().then(() => reject(new Error('Timed out while waiting for response from consumer')))
+          }, timeout)
         }
 
         channel.consume(replyQueue, message => {
-          if (!message || (message.properties.correlationId !== correlationId)) return;
+          if (!message || (message.properties.correlationId !== correlationId)) return
 
-          debug(`[${queue}] Receiving response in reply queue [${replyQueue}] for correlation ID ${correlationId}...`, 'OK');
+          debug(`[${queue}] Receiving response in reply queue [${replyQueue}] for correlation ID ${correlationId}...`, 'OK')
 
-          channel.close().then(() => resolve(decodePayload(message.content)));
+          channel.close().then(() => resolve(decodePayload(message.content)))
         }, {
           noAck: true,
-        });
+        })
       }
 
       channel.sendToQueue(queue, encodePayload(payload), {
@@ -673,14 +673,14 @@ export default class AMQPConnectionManager extends EventEmitter {
         contentType: 'application/json',
         replyTo: replyTo === false ? undefined : (replyTo === true ? DEFAULT_REPLY_TO_QUEUE : replyTo),
         persistent: durable,
-      });
+      })
 
-      debug(`[${queue}] Sending message...`, 'OK');
+      debug(`[${queue}] Sending message...`, 'OK')
 
       if (replyTo === false) {
-        channel.close().then(() => resolve(correlationId));
+        channel.close().then(() => resolve(correlationId))
       }
-    });
+    })
   }
 
   /**
@@ -705,78 +705,78 @@ export default class AMQPConnectionManager extends EventEmitter {
     prefetch = 0,
     autoCloseChannel = false,
   }: AMQPConnectionManagerReceiveFromQueueOptions = {}): Promise<Channel> {
-    debug(`[${queue}] Listening for queue...`);
+    debug(`[${queue}] Listening for queue...`)
 
-    const channel = await this.createChannel();
+    const channel = await this.createChannel()
 
-    await channel.assertQueue(queue, { durable });
+    await channel.assertQueue(queue, { durable })
 
-    channel.prefetch(prefetch);
+    channel.prefetch(prefetch)
 
     await channel.consume(queue, async message => {
       if (!message) {
-        debug(`[${queue}] No message received`);
+        debug(`[${queue}] No message received`)
 
         if (autoCloseChannel) {
-          await channel.close();
+          await channel.close()
         }
 
-        return;
+        return
       }
 
-      debug(`[${queue}] Received message from publisher on queue`);
+      debug(`[${queue}] Received message from publisher on queue`)
 
       try {
         if (message.properties.contentType !== 'application/json') {
-          throw new TypeError('The message content type must be of JSON format');
+          throw new TypeError('The message content type must be of JSON format')
         }
 
-        const payload = await handler(decodePayload(message.content));
+        const payload = await handler(decodePayload(message.content))
 
         if (message.properties.replyTo) {
-          debug(`[${queue}] Sending success response to publisher...`);
+          debug(`[${queue}] Sending success response to publisher...`)
 
           channel.sendToQueue(message.properties.replyTo, encodePayload(payload || MessagePayloadMake()), {
             correlationId: message.properties.correlationId,
             contentType: 'application/json',
-          });
+          })
         }
 
         if (ack) {
-          debug(`[${queue}] Sending receipt acknowledgement to publisher...`);
-          channel.ack(message);
+          debug(`[${queue}] Sending receipt acknowledgement to publisher...`)
+          channel.ack(message)
         }
       }
       catch (err) {
-        debug(`[${queue}] Error occured while handling message: ${err.message}`);
+        debug(`[${queue}] Error occured while handling message: ${err.message}`)
 
         if (message.properties.replyTo) {
-          /* tslint:disable-next-line no-console */
-          console.error(err.stack);
+          /* eslint-disable-next-line no-console */
+          console.error(err.stack)
 
-          debug(`[${queue}] Sending error response to publisher for queue...`);
+          debug(`[${queue}] Sending error response to publisher for queue...`)
 
           channel.sendToQueue(message.properties.replyTo, encodePayload(MessagePayloadMake(err)), {
             correlationId: message.properties.correlationId,
             contentType: 'application/json',
-          });
+          })
 
-          if (ack) channel.nack(message, false, false);
+          if (ack) channel.nack(message, false, false)
         }
         else {
-          if (ack) channel.nack(message, false, false);
-          throw err;
+          if (ack) channel.nack(message, false, false)
+          throw err
         }
       }
 
       if (autoCloseChannel) {
-        await channel.close();
+        await channel.close()
       }
     }, {
       noAck: !ack,
-    });
+    })
 
-    return channel;
+    return channel
   }
 
   /**
@@ -800,11 +800,11 @@ export default class AMQPConnectionManager extends EventEmitter {
       exchangeType: 'fanout',
       key: '',
       replyTo: false,
-    });
+    })
 
-    if (!typeIsCorrelationID(corrId)) throw new Error('Expected return value to be a valid correlation ID');
+    if (!typeIsCorrelationID(corrId)) throw new Error('Expected return value to be a valid correlation ID')
 
-    return corrId;
+    return corrId
   }
 
   /**
@@ -822,16 +822,14 @@ export default class AMQPConnectionManager extends EventEmitter {
     prefetch = 0,
     autoCloseChannel = false,
   }: AMQPConnectionManagerListenOptions = {}): Promise<Channel> {
-    return this.receiveFromExchange(exchange, async (routingKey, payload) => {
-      return handler(payload);
-    }, {
+    return this.receiveFromExchange(exchange, async (routingKey, payload) => handler(payload), {
       ack,
       durable,
       exchangeType: 'fanout',
       keys: '',
       prefetch,
       autoCloseChannel,
-    });
+    })
   }
 
   /**
@@ -857,9 +855,9 @@ export default class AMQPConnectionManager extends EventEmitter {
       key,
       replyTo,
       timeout,
-    });
+    })
 
-    return res;
+    return res
   }
 
   /**
@@ -885,7 +883,7 @@ export default class AMQPConnectionManager extends EventEmitter {
       keys: key,
       prefetch,
       autoCloseChannel,
-    });
+    })
   }
 
   /**
@@ -911,9 +909,9 @@ export default class AMQPConnectionManager extends EventEmitter {
       key: topic,
       replyTo,
       timeout,
-    });
+    })
 
-    return res;
+    return res
   }
 
   /**
@@ -939,7 +937,7 @@ export default class AMQPConnectionManager extends EventEmitter {
       keys: topic,
       prefetch,
       autoCloseChannel,
-    });
+    })
   }
 
   /**
@@ -947,21 +945,21 @@ export default class AMQPConnectionManager extends EventEmitter {
    */
   private async onDisconnect() {
     if (this.connection) {
-      this.connection.removeAllListeners();
+      this.connection.removeAllListeners()
 
       try {
-        await this.connection.close();
+        await this.connection.close()
       }
       catch (err) {
-        debug(`Failed to close the connection because: ${err.message}`);
+        debug(`Failed to close the connection because: ${err.message}`)
 
-        /* tslint:disable-next-line no-console */
-        console.error(err.stack);
+        /* eslint-disable-next-line no-console */
+        console.error(err.stack)
       }
 
-      this.connection = undefined;
+      this.connection = undefined
 
-      this.emit(AMQPEventType.DISCONNECT);
+      this.emit(AMQPEventType.DISCONNECT)
     }
   }
 
@@ -970,11 +968,11 @@ export default class AMQPConnectionManager extends EventEmitter {
    * wait for a few seconds (whatever the heartbeat is set to).
    */
   private async pulse() {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       setTimeout(() => {
-        resolve();
-      }, this.heartbeat * 1000);
-    });
+        resolve()
+      }, this.heartbeat * 1000)
+    })
   }
 
   /**
@@ -986,21 +984,21 @@ export default class AMQPConnectionManager extends EventEmitter {
     // established.
     if (!this.connection) {
       return new Promise<Channel>(resolve => {
-        this.once(AMQPEventType.CONNECT, () => this.createChannel().then(res => resolve(res)));
-      });
+        this.once(AMQPEventType.CONNECT, () => this.createChannel().then(res => resolve(res)))
+      })
     }
 
-    const channel = await this.connection.createChannel();
-    const i = this.channels.indexOf(channel);
-    if (i < 0) this.channels.push(channel);
+    const channel = await this.connection.createChannel()
+    const i = this.channels.indexOf(channel)
+    if (i < 0) this.channels.push(channel)
 
     channel.on('close', () => {
-      const j = this.channels.indexOf(channel);
-      if (j < 0) return;
-      this.channels.splice(j, 1);
-    });
+      const j = this.channels.indexOf(channel)
+      if (j < 0) return
+      this.channels.splice(j, 1)
+    })
 
-    return channel;
+    return channel
   }
 
   /**
@@ -1009,18 +1007,18 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @param reason - The reason why the connection is blocked.
    */
   private onConnectionBlocked = (reason: string) => {
-    debug(`MQ server blocked the connection because: ${reason}`);
+    debug(`MQ server blocked the connection because: ${reason}`)
 
-    this.emit(AMQPEventType.BLOCKED, { reason });
+    this.emit(AMQPEventType.BLOCKED, { reason })
   }
 
   /**
    * Handler invoked when the connection is unblocked.
    */
   private onConnectionUnblocked = () => {
-    debug('MQ server has unblocked the connection');
+    debug('MQ server has unblocked the connection')
 
-    this.emit(AMQPEventType.UNBLOCKED);
+    this.emit(AMQPEventType.UNBLOCKED)
   }
 
   /**
@@ -1029,11 +1027,11 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @param error - The error.
    */
   private onConnectionError = (error: Error) => {
-    debug(`An error occured in the MQ connection: ${error}`);
+    debug(`An error occured in the MQ connection: ${error}`)
 
-    this.emit(AMQPEventType.ERROR);
+    this.emit(AMQPEventType.ERROR)
 
-    this.onDisconnect().then(() => this.connect());
+    this.onDisconnect().then(() => this.connect())
   }
 
   /**
@@ -1042,8 +1040,8 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @param error - The error.
    */
   private onConnectionClose = (error: Error) => {
-    debug(`MQ connection closed: ${error}`);
+    debug(`MQ connection closed: ${error}`)
 
-    this.onDisconnect().then(() => this.connect());
+    this.onDisconnect().then(() => this.connect())
   }
 }
