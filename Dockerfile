@@ -1,7 +1,7 @@
 ###
 # Base Node.js image.
 ##
-FROM node:14.13.1 as build-env
+FROM node:16.3.0 as build-env
 
 
 ## Build
@@ -29,7 +29,6 @@ FROM build as test
 
 WORKDIR /var/app
 
-RUN sed -i '/"\*\*\/\*\.spec\.ts"/d' ./tsconfig.json
-RUN npm run build
+RUN npm run build:test
 
-CMD npm run test
+CMD npm test

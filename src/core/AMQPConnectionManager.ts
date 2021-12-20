@@ -12,39 +12,36 @@ const DEFAULT_REPLY_TO_QUEUE = 'amq.rabbitmq.reply-to'
 
 export interface AMQPConnectionManagerOptions {
   /**
-   * Time in seconds to wait before attempting to auto-reconnect whenever the
-   * connection is lost. Specify 0 to never auto-reconnect.
+   * Time in seconds to wait before attempting to auto-reconnect whenever the connection is lost.
+   * Specify 0 to never auto-reconnect.
    */
   heartbeat?: number
 }
 
 export interface AMQPConnectionManagerSendToQueueOptions {
   /**
-   * Correlation ID of this message. If none provided, a random one will be
-   * generated.
+   * Correlation ID of this message. If none provided, a random one will be generated.
    */
   correlationId?: string
 
   /**
-   * Indicates whether the message should be preserved in the case that the
-   * publisher dies. If this is `true`, the queue which the message is sent to
-   * will be marked as durable and the message that is sent will be marked as
-   * persistent, i.e. setting `persistent` to `true`.
+   * Indicates whether the message should be preserved in the case that the publisher dies. If this
+   * is `true`, the queue which the message is sent to will be marked as durable and the message
+   * that is sent will be marked as persistent, i.e. setting `persistent` to `true`.
    */
   durable?: boolean
 
   /**
-   * Indicates the name of the queue on which the publisher is expecting a
-   * reply. Provide the name of the queue or simply set this to `true` to use
-   * the default reply-to queue. If set to `false`, no reply is expected from
-   * the consumer.
+   * Indicates the name of the queue on which the publisher is expecting a reply. Provide the name
+   * of the queue or simply set this to `true` to use the default reply-to queue. If set to `false`,
+   * no reply is expected from the consumer.
    */
   replyTo?: string | boolean
 
   /**
-   * Timeout in milliseconds to throw an error when the specified time has
-   * passed whilst the channel hasn't given any response. This is only used if
-   * `replyTo` is set. Set this to `0` or `undefined` to indicate no timeout.
+   * Timeout in milliseconds to throw an error when the specified time has passed whilst the channel
+   * hasn't given any response. This is only used if `replyTo` is set. Set this to `0` or
+   * `undefined` to indicate no timeout.
    */
   timeout?: number
 }
@@ -56,37 +53,34 @@ export interface AMQPConnectionManagerReceiveFromQueueOptions {
   ack?: boolean
 
   /**
-   * Indicates whether the queue which the publisher sent its messages to is
-   * marked as durable. This is required because in case the queue is not
-   * created or destroyed for whatever reason, the consumer can recreate the
-   * queue with the same properties.
+   * Indicates whether the queue which the publisher sent its messages to is marked as durable. This
+   * is required because in case the queue is not created or destroyed for whatever reason, the
+   * consumer can recreate the queue with the same properties.
    */
   durable?: boolean
 
   /**
-   * Determines how many messages this consumer can receive on the same queue
-   * before any acknowledgement was sent.
+   * Determines how many messages this consumer can receive on the same queue before any
+   * acknowledgement was sent.
    */
   prefetch?: number
 
   /**
-   * Specifies whether the opened channel should be closed automatically after
-   * the message is received.
+   * Specifies whether the opened channel should be closed automatically after the message is
+   * received.
    */
   autoCloseChannel?: boolean
 }
 
 export interface AMQPConnectionManagerSendToExchangeOptions {
   /**
-   * Correlation ID of this message. If none provided, a random one will be
-   * generated.
+   * Correlation ID of this message. If none provided, a random one will be generated.
    */
   correlationId?: string
 
   /**
-   * Indicates whether the message should be preserved in the case that the
-   * publisher dies. If this is `true`, the queue which the message is sent to
-   * will be marked as durable.
+   * Indicates whether the message should be preserved in the case that the publisher dies. If this
+   * is `true`, the queue which the message is sent to will be marked as durable.
    */
   durable?: boolean
 
@@ -96,23 +90,22 @@ export interface AMQPConnectionManagerSendToExchangeOptions {
   exchangeType?: ExchangeType
 
   /**
-   * Indicates the routing key of the exchange to publish to. Note that this
-   * value does nothing if the exchange type is set to `fanout`.
+   * Indicates the routing key of the exchange to publish to. Note that this value does nothing if
+   * the exchange type is set to `fanout`.
    */
   key?: string
 
   /**
-   * Indicates the name of the queue on which the publisher is expecting a
-   * reply. Provide the name of the queue or simply set this to `true` to use
-   * the default reply-to queue. If set to `false`, no reply is expected from
-   * the consumer.
+   * Indicates the name of the queue on which the publisher is expecting a reply. Provide the name
+   * of the queue or simply set this to `true` to use the default reply-to queue. If set to `false`,
+   * no reply is expected from the consumer.
    */
   replyTo?: boolean | string
 
   /**
-   * Timeout in milliseconds to throw an error when the specified time has
-   * passed whilst the channel hasn't given any response. This is only used if
-   * `replyTo` is set. Set this to `0` or `undefined` to indicate no timeout.
+   * Timeout in milliseconds to throw an error when the specified time has passed whilst the channel
+   * hasn't given any response. This is only used if `replyTo` is set. Set this to `0` or
+   * `undefined` to indicate no timeout.
    */
   timeout?: number
 }
@@ -124,10 +117,9 @@ export interface AMQPConnectionManagerReceiveFromExchangeOptions {
   ack?: boolean
 
   /**
-   * Indicates whether the queue which the publisher sent its messages to is
-   * marked as durable. This is required because in case the queue is not
-   * created or destroyed for whatever reason, the consumer can recreate the
-   * queue with the same properties.
+   * Indicates whether the queue which the publisher sent its messages to is marked as durable. This
+   * is required because in case the queue is not created or destroyed for whatever reason, the
+   * consumer can recreate the queue with the same properties.
    */
   durable?: boolean
 
@@ -142,30 +134,28 @@ export interface AMQPConnectionManagerReceiveFromExchangeOptions {
   keys?: string | string[]
 
   /**
-   * Determines how many messages this consumer can receive on the same queue
-   * before any acknowledgement was sent.
+   * Determines how many messages this consumer can receive on the same queue before any
+   * acknowledgement was sent.
    */
   prefetch?: number
 
   /**
-   * Specifies whether the opened channel should be closed automatically after
-   * the message is received.
+   * Specifies whether the opened channel should be closed automatically after the message is
+   * received.
    */
   autoCloseChannel?: boolean
 }
 
 export interface AMQPConnectionManagerBroadcastOptions {
   /**
-   * Correlation ID of this message. If none provided, a random one will be
-   * generated.
+   * Correlation ID of this message. If none provided, a random one will be generated.
    */
   correlationId?: string
 
   /**
-   * Indicates whether the message should be preserved in the case that the
-   * publisher dies. If this is `true`, the queue which the message is sent to
-   * will be marked as durable and the message that is sent will be marked as
-   * persistent, i.e. setting `persistent` to `true`.
+   * Indicates whether the message should be preserved in the case that the publisher dies. If this
+   * is `true`, the queue which the message is sent to will be marked as durable and the message
+   * that is sent will be marked as persistent, i.e. setting `persistent` to `true`.
    */
   durable?: boolean
 }
@@ -177,52 +167,48 @@ export interface AMQPConnectionManagerListenOptions {
   ack?: boolean
 
   /**
-   * Indicates whether the queue which the publisher sent its messages to is
-   * marked as durable. This is required because in case the queue is not
-   * created or destroyed for whatever reason, the consumer can recreate the
-   * queue with the same properties.
+   * Indicates whether the queue which the publisher sent its messages to is marked as durable. This
+   * is required because in case the queue is not created or destroyed for whatever reason, the
+   * consumer can recreate the queue with the same properties.
    */
   durable?: boolean
 
   /**
-   * Determines how many messages this consumer can receive on the same queue
-   * before any acknowledgement was sent.
+   * Determines how many messages this consumer can receive on the same queue before any
+   * acknowledgement was sent.
    */
   prefetch?: number
 
   /**
-   * Specifies whether the opened channel should be closed automatically after
-   * the message is received.
+   * Specifies whether the opened channel should be closed automatically after the message is
+   * received.
    */
   autoCloseChannel?: boolean
 }
 
 export interface AMQPConnectionManagerSendToTopicOptions {
   /**
-   * Correlation ID of this message. If none provided, a random one will be
-   * generated.
+   * Correlation ID of this message. If none provided, a random one will be generated.
    */
   correlationId?: string
 
   /**
-   * Indicates whether the message should be preserved in the case that the
-   * publisher dies. If this is `true`, the queue which the message is sent to
-   * will be marked as durable.
+   * Indicates whether the message should be preserved in the case that the publisher dies. If this
+   * is `true`, the queue which the message is sent to will be marked as durable.
    */
   durable?: boolean
 
   /**
-   * Indicates the name of the queue on which the publisher is expecting a
-   * reply. Provide the name of the queue or simply set this to `true` to use
-   * the default reply-to queue. If set to `false`, no reply is expected from
-   * the consumer.
+   * Indicates the name of the queue on which the publisher is expecting a reply. Provide the name
+   * of the queue or simply set this to `true` to use the default reply-to queue. If set to `false`,
+   * no reply is expected from the consumer.
    */
   replyTo?: boolean | string
 
   /**
-   * Timeout in milliseconds to throw an error when the specified time has
-   * passed whilst the channel hasn't given any response. This is only used if
-   * `replyTo` is set. Set this to `0` or `undefined` to indicate no timeout.
+   * Timeout in milliseconds to throw an error when the specified time has passed whilst the channel
+   * hasn't given any response. This is only used if `replyTo` is set. Set this to `0` or
+   * `undefined` to indicate no timeout.
    */
   timeout?: number
 }
@@ -234,53 +220,48 @@ export interface AMQPConnectionManagerReceiveFromTopicOptions {
   ack?: boolean
 
   /**
-   * Indicates whether the queue which the publisher sent its messages to is
-   * marked as durable. This is required because in case the queue is not
-   * created or destroyed for whatever reason, the consumer can recreate the
-   * queue with the same properties.
+   * Indicates whether the queue which the publisher sent its messages to is marked as durable. This
+   * is required because in case the queue is not created or destroyed for whatever reason, the
+   * consumer can recreate the queue with the same properties.
    */
   durable?: boolean
 
   /**
-   * Determines how many messages this consumer can receive on the same queue
-   * before any acknowledgement was sent.
+   * Determines how many messages this consumer can receive on the same queue before any
+   * acknowledgement was sent.
    */
   prefetch?: number
 
   /**
-   * Specifies whether the opened channel should be closed automatically after
-   * the message is received.
+   * Specifies whether the opened channel should be closed automatically after the message is
+   * received.
    */
   autoCloseChannel?: boolean
 }
 
 export interface AMQPConnectionManagerSendToDirectExchangeOptions {
   /**
-   * Correlation ID of this message. If none provided, a random one will be
-   * generated.
+   * Correlation ID of this message. If none provided, a random one will be generated.
    */
   correlationId?: string
 
   /**
-   * Indicates whether the message should be preserved in the case that the
-   * publisher dies. If this is `true`, the queue which the message is sent to
-   * will be marked as durable.
+   * Indicates whether the message should be preserved in the case that the publisher dies. If this
+   * is `true`, the queue which the message is sent to will be marked as durable.
    */
   durable?: boolean
 
   /**
-   * Indicates the name of the queue on which the publisher is expecting a
-   * reply. Provide the name of the queue or simply set this to `true` to use
-   * the default reply-to queue. If set to `false`, no reply is expected from
-   * the consumer.
+   * Indicates the name of the queue on which the publisher is expecting a reply. Provide the name
+   * of the queue or simply set this to `true` to use the default reply-to queue. If set to `false`,
+   * no reply is expected from the consumer.
    */
   replyTo?: boolean | string
 
   /**
-   * Timeout in milliseconds to throw an error when the specified time has
-   * passed whilst the channel hasn't given any response. This is only used if
-   * `durable` is `false` and `replyTo` is set. Set this to `0` or `undefined`
-   * to indicate no timeout.
+   * Timeout in milliseconds to throw an error when the specified time has passed whilst the channel
+   * hasn't given any response. This is only used if `durable` is `false` and `replyTo` is set. Set
+   * this to `0` or `undefined` to indicate no timeout.
    */
   timeout?: number
 }
@@ -292,22 +273,21 @@ export interface AMQPConnectionManagerReceiveFromDirectExchangeOptions {
   ack?: boolean
 
   /**
-   * Indicates whether the queue which the publisher sent its messages to is
-   * marked as durable. This is required because in case the queue is not
-   * created or destroyed for whatever reason, the consumer can recreate the
-   * queue with the same properties.
+   * Indicates whether the queue which the publisher sent its messages to is marked as durable. This
+   * is required because in case the queue is not created or destroyed for whatever reason, the
+   * consumer can recreate the queue with the same properties.
    */
   durable?: boolean
 
   /**
-   * Determines how many messages this consumer can receive on the same queue
-   * before any acknowledgement was sent.
+   * Determines how many messages this consumer can receive on the same queue before any
+   * acknowledgement was sent.
    */
   prefetch?: number
 
   /**
-   * Specifies whether the opened channel should be closed automatically after
-   * the message is received.
+   * Specifies whether the opened channel should be closed automatically after the message is
+   * received.
    */
   autoCloseChannel?: boolean
 }
@@ -343,8 +323,7 @@ export default class AMQPConnectionManager extends EventEmitter {
   get id() { return this.uuid }
 
   /**
-   * Checks if this AMQPConnectionManager instance is connected to the MQ
-   * message-broker.
+   * Checks if this AMQPConnectionManager instance is connected to the MQ message-broker.
    *
    * @returns `true` if connected, `false` otherwise.
    */
@@ -422,8 +401,8 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @param payload - Message payload.
    * @param options - See `AMQPConnectionManagerSendToExchangeOptions`.
    *
-   * @returns The correlation ID if this method does not expect a reply from the
-   *          consumer. Otherwise it returns the reply from the consumer.
+   * @returns The correlation ID if this method does not expect a reply from the consumer. Otherwise
+   *          it returns the reply from the consumer.
    *
    * @throws {TypeError} Invalid payload.
    * @throws {Error} Timed out waiting for a reply from the consumer.
@@ -505,10 +484,9 @@ export default class AMQPConnectionManager extends EventEmitter {
   }
 
   /**
-   * Creates a new channel and waits for a message to arrive in an exchange. If
-   * there is an error handling the message (when it arrives) and a reply-to
-   * queue is provided, the error is serialized into an object and sent back to
-   * the publisher. Otherwise the error is thrown.
+   * Creates a new channel and waits for a message to arrive in an exchange. If there is an error
+   * handling the message (when it arrives) and a reply-to queue is provided, the error is
+   * serialized into an object and sent back to the publisher. Otherwise the error is thrown.
    *
    * @param exchange - Name of the exchange.
    * @param handler - Handler invoked when the message is received.
@@ -516,8 +494,8 @@ export default class AMQPConnectionManager extends EventEmitter {
    *
    * @returns The channel created.
    *
-   * @throws {Error} Something went wrong while handling the received message,
-   *                 usually due to the handler function provided.
+   * @throws {Error} Something went wrong while handling the received message, usually due to the
+   *                 handler function provided.
    */
   async receiveFromExchange(exchange: string, handler: (routingKey: string, payload: MessagePayload) => Promise<MessagePayload | void>, {
     ack = true,
@@ -580,11 +558,11 @@ export default class AMQPConnectionManager extends EventEmitter {
         }
       }
       catch (err) {
-        debug(`[${exchange}] Error occured while handling message for keys "${keys}": ${err.message}`)
+        debug(`[${exchange}] Error occured while handling message for keys "${keys}": ${err}`)
 
         if (message.properties.replyTo) {
           /* eslint-disable-next-line no-console */
-          console.error(err.stack)
+          console.error(err)
 
           debug(`[${exchange}] Sending error response to publisher for keys "${keys}"...`)
 
@@ -618,8 +596,8 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @param payload - Message payload.
    * @param options - See `AMQPConnectionManagerSendToQueueOptions`.
    *
-   * @returns A message payload from the consumer if this operation expects a
-   *          reply, the correlation ID otherwise.
+   * @returns A message payload from the consumer if this operation expects a reply, the correlation
+   *          ID otherwise.
    *
    * @throws {TypeError} Invalid payload.
    * @throws {Error} Timed out waiting for a reply from the consumer.
@@ -684,10 +662,9 @@ export default class AMQPConnectionManager extends EventEmitter {
   }
 
   /**
-   * Creates a new channel and waits for a message to arrive in a queue. If
-   * there is an error handling the message (when it arrives) and a reply-to
-   * queue is provided, the error is serialized into an object and sent back to
-   * the publisher. Otherwise the error is thrown.
+   * Creates a new channel and waits for a message to arrive in a queue. If there is an error
+   * handling the message (when it arrives) and a reply-to queue is provided, the error is
+   * serialized into an object and sent back to the publisher. Otherwise the error is thrown.
    *
    * @param queue - Name of the queue.
    * @param handler - Handler invoked when the message is received.
@@ -696,8 +673,8 @@ export default class AMQPConnectionManager extends EventEmitter {
    * @returns The created channel.
    *
    * @throws {TypeError} Invalid message content type.
-   * @throws {Error} Something went wrong while handling the received message,
-   *                 usually due to the handler function provided.
+   * @throws {Error} Something went wrong while handling the received message, usually due to the
+   *                 handler function provided.
    */
   async receiveFromQueue(queue: string, handler: (payload: MessagePayload) => Promise<MessagePayload | void>, {
     ack = true,
@@ -748,11 +725,11 @@ export default class AMQPConnectionManager extends EventEmitter {
         }
       }
       catch (err) {
-        debug(`[${queue}] Error occured while handling message: ${err.message}`)
+        debug(`[${queue}] Error occured while handling message: ${err}`)
 
         if (message.properties.replyTo) {
           /* eslint-disable-next-line no-console */
-          console.error(err.stack)
+          console.error(err)
 
           debug(`[${queue}] Sending error response to publisher for queue...`)
 
@@ -951,10 +928,10 @@ export default class AMQPConnectionManager extends EventEmitter {
         await this.connection.close()
       }
       catch (err) {
-        debug(`Failed to close the connection because: ${err.message}`)
+        debug(`Failed to close the connection because: ${err}`)
 
         /* eslint-disable-next-line no-console */
-        console.error(err.stack)
+        console.error(err)
       }
 
       this.connection = undefined
@@ -964,8 +941,8 @@ export default class AMQPConnectionManager extends EventEmitter {
   }
 
   /**
-   * Pulse for the duration of the heartbeat provided. This basically means
-   * wait for a few seconds (whatever the heartbeat is set to).
+   * Pulse for the duration of the heartbeat provided. This basically means wait for a few seconds
+   * (whatever the heartbeat is set to).
    */
   private async pulse() {
     return new Promise<void>((resolve, reject) => {
@@ -976,12 +953,10 @@ export default class AMQPConnectionManager extends EventEmitter {
   }
 
   /**
-   * Creates a new channel. Use this convenience method to store the channel
-   * instance internally.
+   * Creates a new channel. Use this convenience method to store the channel instance internally.
    */
   private async createChannel(): Promise<Channel> {
-    // Ensure there is an active connection. If not, retry once a connection is
-    // established.
+    // Ensure there is an active connection. If not, retry once a connection is established.
     if (!this.connection) {
       return new Promise<Channel>(resolve => {
         this.once(AMQPEventType.CONNECT, () => this.createChannel().then(res => resolve(res)))

@@ -1,13 +1,15 @@
 {
   "name": "@sybl/message-broker",
-  "version": "0.45.0",
+  "version": "0.46.0",
   "description": "Node.js message broker that helps managing AMQP connections and sending/receiving messages",
   "main": "build/index.js",
   "scripts": {
     "clean": "rimraf build",
+    "prebuild": "npm run lint",
     "build": "npm run clean && tsc",
-    "test": "DEBUG=message-broker* mocha --timeout 20000 --reporter spec --full-trace --colors --recursive --exit $([ -z \"$npm_config_path\" ] && echo build/**/*.spec.js || echo $npm_config_path)",
-    "test:ts": "DEBUG=message-broker* mocha -r ts-node/register --timeout 20000 --reporter spec --full-trace --colors --recursive --exit $([ -z \"$npm_config_path\" ] && echo src/**/*.spec.ts || echo $npm_config_path)",
+    "build:test": "npm run build -- --project tsconfig.test.json",
+    "test": "cross-env mocha --timeout 30000 --reporter spec --full-trace --colors --recursive --bail --exit $([ -z \"$npm_config_files\" ] && echo \"build/**/*.spec.js\" || echo \"build/$npm_config_files\")",
+    "test:ts": "cross-env DEBUG=message-broker* mocha -r ts-node/register --timeout 30000 --reporter spec --full-trace --colors --recursive --bail --exit $([ -z \"$npm_config_files\" ] && echo \"src/**/*.spec.ts\" || echo \"src/$npm_config_files\")",
     "lint": "eslint --ext .ts src",
     "lint:fix": "npm run lint -- --fix",
     "mq": "docker run --name node-message-broker-mq -d --rm -p 5672:5672 rabbitmq:3.7.8-management",
@@ -27,30 +29,30 @@
     "url": "https://github.com/sybl/node-message-broker/issues"
   },
   "homepage": "https://github.com/sybl/node-message-broker#readme",
+  "types": "build/index.d.ts",
   "devDependencies": {
-    "@types/bson": "^4.0.4",
-    "@types/debug": "^4.1.6",
-    "@types/lodash": "^4.14.171",
-    "@types/mocha": "^8.2.3",
+    "@types/debug": "^4.1.7",
+    "@types/lodash": "^4.14.178",
+    "@types/mocha": "^9.0.0",
     "@types/parse-json": "^4.0.0",
-    "@types/uuid": "^8.3.1",
-    "@typescript-eslint/eslint-plugin": "^4.28.2",
-    "@typescript-eslint/parser": "^4.28.2",
-    "eslint": "^7.30.0",
-    "mocha": "^9.0.2",
+    "@types/uuid": "^8.3.3",
+    "@typescript-eslint/eslint-plugin": "^5.7.0",
+    "@typescript-eslint/parser": "^5.7.0",
+    "cross-env": "^7.0.3",
+    "eslint": "^8.5.0",
+    "mocha": "^9.1.3",
     "rimraf": "^3.0.2",
-    "ts-node": "^10.0.0",
-    "typescript": "^4.3.5"
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4"
   },
   "dependencies": {
-    "@types/amqplib": "^0.8.1",
+    "@types/amqplib": "^0.8.2",
     "amqplib": "^0.8.0",
-    "bson": "^4.4.1",
-    "debug": "^4.3.2",
+    "bson": "^4.6.0",
+    "debug": "^4.3.3",
     "lodash": "^4.17.21",
     "parse-json": "^5.2.0",
     "serialize-error": "^8.1.0",
     "uuid": "^8.3.2"
-  },
-  "types": "build/index.d.ts"
+  }
 }

@@ -3,6 +3,7 @@ import { MessagePayload } from '../types'
 import AMQPConnectionManager, { AMQPConnectionManagerReceiveFromDirectExchangeOptions, AMQPConnectionManagerReceiveFromExchangeOptions, AMQPConnectionManagerReceiveFromQueueOptions, AMQPConnectionManagerReceiveFromTopicOptions } from './AMQPConnectionManager'
 
 export default class RPCServer extends AMQPConnectionManager {
+
   /**
    * @inheritdoc
    */

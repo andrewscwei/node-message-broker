@@ -3,6 +3,7 @@ import { createCorrelationId } from '../utils'
 import AMQPConnectionManager, { AMQPConnectionManagerSendToDirectExchangeOptions, AMQPConnectionManagerSendToExchangeOptions, AMQPConnectionManagerSendToQueueOptions, AMQPConnectionManagerSendToTopicOptions } from './AMQPConnectionManager'
 
 export default class RPCClient extends AMQPConnectionManager {
+
   /**
    * @inheritdoc
    *
