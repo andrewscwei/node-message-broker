@@ -1,9 +1,9 @@
+import { SuperErrorObject, typeIsSuperErrorObject } from '@andrewscwei/super-error'
 import _ from 'lodash'
-import { ErrorObject, serializeError } from 'serialize-error'
 
 export type MessagePayload = Readonly<{
   data: any
-  error?: ErrorObject
+  error?: SuperErrorObject
 }>
 
 export type ExchangeType = 'fanout' | 'topic' | 'direct'
@@ -30,40 +30,13 @@ export function typeIsMessagePayload(value: any): value is MessagePayload {
 
   if (dataIdx < 0) return false
   if (keys.length > 1 && errorIdx < 0) return false
-  if ((errorIdx > -1) && !_.isNil(value.error) && !typeIsErrorObject(value.error)) return false
+  if ((errorIdx > -1) && !_.isNil(value.error) && !typeIsSuperErrorObject(value.error)) return false
 
   return true
-}
-
-export function MessagePayloadMake(value?: any): MessagePayload {
-  if (_.isNil(value)) {
-    return {
-      data: null,
-    }
-  }
-  else if (_.isError(value)) {
-    return {
-      data: null,
-      error: serializeError(value),
-    }
-  }
-  else {
-    return {
-      data: value,
-    }
-  }
 }
 
 export function typeIsCorrelationID(value: any): value is CorrelationID {
   if (!_.isString(value)) return false
-  return true
-}
-
-export function typeIsErrorObject(value: any): value is ErrorObject {
-  if (!_.isPlainObject(value)) return false
-  if (!value.name) return false
-  if (!value.stack) return false
-  if (!value.message) return false
   return true
 }
 

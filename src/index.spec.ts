@@ -4,7 +4,8 @@ import AMQPConnectionManager from './core/AMQPConnectionManager'
 import RPCClient from './core/RPCClient'
 import RPCServer from './core/RPCServer'
 import { AMQPEventType } from './enums'
-import { MessagePayload, MessagePayloadMake } from './types'
+import { MessagePayload } from './types'
+import { MessagePayloadMake } from './utils'
 
 describe('message-broker', () => {
   it('can create a new AMQPConnectionManager instance that auto connects to a MQ server', async () => {

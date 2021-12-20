@@ -1,5 +1,6 @@
 import parseJson from 'parse-json'
-import { MessagePayload, MessagePayloadMake, typeIsMessagePayload } from '../types'
+import { MessagePayload, typeIsMessagePayload } from '../types'
+import { MessagePayloadMake } from '../utils'
 
 export default function decodePayload(buffer: Buffer): MessagePayload {
   const str = buffer.toString()

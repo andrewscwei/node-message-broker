@@ -1,4 +1,6 @@
-import { ActionWithoutParams, MessagePayload, MessagePayloadMake } from '../types'
+import SuperError from '@andrewscwei/super-error'
+import { ActionWithoutParams, MessagePayload } from '../types'
+import { MessagePayloadMake } from '../utils'
 
 /**
  * Maps an action to a function that can be used by consumers to handle incoming messages. Also
@@ -16,7 +18,7 @@ export default function invokeAction(action: ActionWithoutParams, errorHandler?:
     try {
       const { error } = payload
 
-      if (error) throw new Error(error.message)
+      if (error) throw SuperError.deserialize(error)
 
       const res = await action()
 

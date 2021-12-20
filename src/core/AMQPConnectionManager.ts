@@ -3,8 +3,8 @@ import { EventEmitter } from 'events'
 import _ from 'lodash'
 import { v1 as uuid } from 'uuid'
 import { AMQPEventType } from '../enums'
-import { CorrelationID, ExchangeType, MessagePayload, MessagePayloadMake, typeIsCorrelationID, typeIsMessagePayload } from '../types'
-import { createCorrelationId, decodePayload, encodePayload } from '../utils'
+import { CorrelationID, ExchangeType, MessagePayload, typeIsCorrelationID, typeIsMessagePayload } from '../types'
+import { createCorrelationId, decodePayload, encodePayload, MessagePayloadMake } from '../utils'
 
 const debug = require('debug')('message-broker')
 

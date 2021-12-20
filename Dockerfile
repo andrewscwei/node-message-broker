@@ -12,10 +12,11 @@ FROM build-env as build
 
 WORKDIR /var/app
 
-ADD package.json /var/app/
+ADD package*.json /var/app/
 ADD src /var/app/src
-ADD tsconfig.json /var/app/
-ADD package-lock.json /var/app/
+ADD ts*.json /var/app/
+COPY .npmrc /var/app/
+COPY .eslintrc /var/app/
 
 RUN npm install
 RUN npm run build

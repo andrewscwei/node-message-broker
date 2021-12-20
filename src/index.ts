@@ -55,7 +55,7 @@ export function configureMb(options: Configuration) {
  * @param options - @see AMQPConnectionManagerOptions
  */
 export default function factory(): AMQPConnectionManager {
-  if (!config) throw new Error('You must call #configureMb before using this method')
+  if (!config) throw new Error('You must call configureMb() before using this method')
   const { host, ...options } = config
   return new AMQPConnectionManager(host, options)
 }
@@ -86,7 +86,7 @@ export function getDefaultConsumer(): AMQPConnectionManager {
  * @returns The default RPC client instance.
  */
 export function getDefaultRPCClient(): RPCClient {
-  if (!config) throw new Error('You must call #configureMb before using this method')
+  if (!config) throw new Error('You must call configureMb() before using this method')
   const { host, ...options } = config
   if (!rpcClient) rpcClient = new RPCClient(host, options)
   return rpcClient
@@ -98,7 +98,7 @@ export function getDefaultRPCClient(): RPCClient {
  * @returns The default RPC server instance.
  */
 export function getDefaultRPCServer(): RPCServer {
-  if (!config) throw new Error('You must call #configureMb before using this method')
+  if (!config) throw new Error('You must call configureMb() before using this method')
   const { host, ...options } = config
   if (!rpcServer) rpcServer = new RPCServer(host, options)
   return rpcServer
