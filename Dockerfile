@@ -15,7 +15,6 @@ WORKDIR /var/app
 ADD package*.json /var/app/
 ADD src /var/app/src
 ADD ts*.json /var/app/
-COPY .npmrc /var/app/
 COPY .eslintrc /var/app/
 
 RUN npm install
