@@ -1,6 +1,6 @@
 {
   "name": "@sybl/message-broker",
-  "version": "0.46.0",
+  "version": "0.47.0",
   "description": "Node.js message broker that helps managing AMQP connections and sending/receiving messages",
   "main": "build/index.js",
   "scripts": {

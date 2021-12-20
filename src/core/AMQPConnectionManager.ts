@@ -539,7 +539,9 @@ export default class AMQPConnectionManager extends EventEmitter {
 
       try {
         if (message.properties.contentType !== 'application/json') {
-          throw new TypeError('The message content type must be of JSON format')
+          /* eslint-disable-next-line no-console */
+          console.error(new TypeError('The message content type must be of JSON format'))
+          return
         }
 
         const payload = await handler(message.fields.routingKey, decodePayload(message.content))
@@ -575,7 +577,9 @@ export default class AMQPConnectionManager extends EventEmitter {
         }
         else {
           if (ack) channel.nack(message, false, false)
-          throw err
+
+          /* eslint-disable-next-line no-console */
+          console.error(err)
         }
       }
 
@@ -705,7 +709,9 @@ export default class AMQPConnectionManager extends EventEmitter {
 
       try {
         if (message.properties.contentType !== 'application/json') {
-          throw new TypeError('The message content type must be of JSON format')
+          /* eslint-disable-next-line no-console */
+          console.error(new TypeError('The message content type must be of JSON format'))
+          return
         }
 
         const payload = await handler(decodePayload(message.content))
@@ -742,7 +748,9 @@ export default class AMQPConnectionManager extends EventEmitter {
         }
         else {
           if (ack) channel.nack(message, false, false)
-          throw err
+
+          /* eslint-disable-next-line no-console */
+          console.error(err)
         }
       }
 
