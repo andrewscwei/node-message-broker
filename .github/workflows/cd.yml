@@ -67,5 +67,5 @@ jobs:
         uses: andrewscwei/slack-action@v1.0.0
         with:
           success: false
-          webhoook-url: ${{ secrets.SLACK_DEVOPS_WEBHOOK_URL }}
+          webhook-url: ${{ secrets.SLACK_DEVOPS_WEBHOOK_URL }}
 
