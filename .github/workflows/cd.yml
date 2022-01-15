@@ -56,16 +56,13 @@ jobs:
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Notify success
-        if: ${{ success() }}
-        uses: andrewscwei/slack-action@v1.0.0
+  notify:
+    name: Notify
+    needs: [build, test, deploy]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: andrewscwei/slack-action@v1.0.0
         with:
-          success: true
+          success: ${{ needs.build.result == 'success' && needs.test.result == 'success' && needs.deploy.result == 'success' }}
           webhook-url: ${{ secrets.SLACK_DEVOPS_WEBHOOK_URL }}
-      - name: Notify failure
-        if: ${{ failure() }}
-        uses: andrewscwei/slack-action@v1.0.0
-        with:
-          success: false
-          webhook-url: ${{ secrets.SLACK_DEVOPS_WEBHOOK_URL }}
-
