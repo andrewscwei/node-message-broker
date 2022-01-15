@@ -12,7 +12,7 @@
     "test:ts": "cross-env DEBUG=message-broker* mocha -r ts-node/register --timeout 30000 --reporter spec --full-trace --colors --extension spec.ts --recursive --bail --exit $([ -z \"$npm_config_files\" ] && echo \"src\" || echo \"src/$npm_config_files\")",
     "lint": "eslint --ext .ts src",
     "lint:fix": "npm run lint -- --fix",
-    "mq": "docker run --name node-message-broker-mq -d --rm -p 5672:5672 rabbitmq:3.7.8-management",
+    "mq": "docker run --name node-message-broker-mq -d --rm -p 5672:5672 rabbitmq:3.9.12-management",
     "mq:stop": "docker stop node-message-broker-mq",
     "ship:test": "docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit"
   },
