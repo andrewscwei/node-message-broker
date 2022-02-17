@@ -13,11 +13,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Cache Node modules
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: ${{ runner.os }}-node-
+          key: ${{ runner.os }}-build-npm-cache-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-npm-cache-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
       - name: Install NPM dependencies
         run: npm install
       - name: Build

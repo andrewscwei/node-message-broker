@@ -563,9 +563,6 @@ export default class AMQPConnectionManager extends EventEmitter {
         debug(`[${exchange}] Error occured while handling message for keys "${keys}": ${err}`)
 
         if (message.properties.replyTo) {
-          /* eslint-disable-next-line no-console */
-          console.error(err)
-
           debug(`[${exchange}] Sending error response to publisher for keys "${keys}"...`)
 
           channel.sendToQueue(message.properties.replyTo, encodePayload(MessagePayloadMake(err)), {
@@ -575,12 +572,7 @@ export default class AMQPConnectionManager extends EventEmitter {
 
           if (ack) channel.nack(message, false, false)
         }
-        else {
-          if (ack) channel.nack(message, false, false)
-
-          /* eslint-disable-next-line no-console */
-          console.error(err)
-        }
+        else if (ack) channel.nack(message, false, false)
       }
 
       if (autoCloseChannel) {
@@ -734,9 +726,6 @@ export default class AMQPConnectionManager extends EventEmitter {
         debug(`[${queue}] Error occured while handling message: ${err}`)
 
         if (message.properties.replyTo) {
-          /* eslint-disable-next-line no-console */
-          console.error(err)
-
           debug(`[${queue}] Sending error response to publisher for queue...`)
 
           channel.sendToQueue(message.properties.replyTo, encodePayload(MessagePayloadMake(err)), {
@@ -746,12 +735,7 @@ export default class AMQPConnectionManager extends EventEmitter {
 
           if (ack) channel.nack(message, false, false)
         }
-        else {
-          if (ack) channel.nack(message, false, false)
-
-          /* eslint-disable-next-line no-console */
-          console.error(err)
-        }
+        else if (ack) channel.nack(message, false, false)
       }
 
       if (autoCloseChannel) {
@@ -937,9 +921,6 @@ export default class AMQPConnectionManager extends EventEmitter {
       }
       catch (err) {
         debug(`Failed to close the connection because: ${err}`)
-
-        /* eslint-disable-next-line no-console */
-        console.error(err)
       }
 
       this.connection = undefined
