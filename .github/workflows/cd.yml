@@ -52,6 +52,7 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: build
+      - uses: actions/setup-node@v1
       - name: Deploy
         run: npm publish
         env:
