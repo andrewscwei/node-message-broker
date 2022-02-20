@@ -53,6 +53,8 @@ jobs:
         with:
           name: build
       - uses: actions/setup-node@v1
+        with:
+          registry-url: https://npm.pkg.github.com
       - name: Deploy
         run: npm publish
         env:
