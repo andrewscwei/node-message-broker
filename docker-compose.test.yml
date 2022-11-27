@@ -14,6 +14,6 @@ services:
       - "mq"
   mq:
     container_name: "mq"
-    image: "rabbitmq:3.9.12-management"
+    image: "rabbitmq:3.9.25-management"
     ports:
       - "5672:5672"
