@@ -1,8 +1,9 @@
+import useDebug from 'debug'
 import AMQPConnectionManager, { AMQPConnectionManagerOptions } from './core/AMQPConnectionManager'
 import RPCClient from './core/RPCClient'
 import RPCServer from './core/RPCServer'
 
-const debug = require('debug')('message-broker')
+const debug = useDebug('message-broker')
 
 export interface Configuration extends AMQPConnectionManagerOptions {
   host: string
@@ -108,3 +109,4 @@ export * from './enums'
 export * from './types'
 export * from './utils'
 export { AMQPConnectionManager, AMQPConnectionManagerOptions, RPCServer, RPCClient }
+

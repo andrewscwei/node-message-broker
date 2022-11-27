@@ -1,4 +1,5 @@
 import amqplib, { Channel, Connection } from 'amqplib'
+import useDebug from 'debug'
 import { EventEmitter } from 'events'
 import _ from 'lodash'
 import { v1 as uuid } from 'uuid'
@@ -6,7 +7,7 @@ import { AMQPEventType } from '../enums'
 import { CorrelationID, ExchangeType, MessagePayload, typeIsCorrelationID, typeIsMessagePayload } from '../types'
 import { createCorrelationId, decodePayload, encodePayload, MessagePayloadMake } from '../utils'
 
-const debug = require('debug')('message-broker')
+const debug = useDebug('message-broker')
 
 const DEFAULT_REPLY_TO_QUEUE = 'amq.rabbitmq.reply-to'
 
