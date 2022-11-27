@@ -7,12 +7,15 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    container: node:17.5.0
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
       - name: Cache Node modules
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ runner.os }}-build-npm-cache-${{ hashFiles('**/package-lock.json') }}
@@ -31,7 +34,7 @@ jobs:
     container: docker/compose:1.22.0
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Test
         run: docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit
   notify:

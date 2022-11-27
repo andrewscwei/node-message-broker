@@ -8,12 +8,15 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    container: node:17.5.0
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
       - name: Cache Node modules
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ runner.os }}-build-npm-cache-${{ hashFiles('**/package-lock.json') }}
@@ -26,7 +29,7 @@ jobs:
       - name: Build
         run: npm run build
       - name: Persist build dir
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: build
           path: build
@@ -37,38 +40,49 @@ jobs:
     container: docker/compose:1.22.0
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Test
         run: docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit
   deploy:
     name: Deploy
     needs: [build, test]
     runs-on: ubuntu-latest
-    container: node:17.5.0
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+          registry-url: https://npm.pkg.github.com
       - name: Restore build dir
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v3
         with:
           name: build
-      - uses: actions/setup-node@v1
-        with:
-          registry-url: https://npm.pkg.github.com
       - name: Deploy
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Create release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/github-script@v6
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          body_path: RELEASE.md
-          draft: false
-          prerelease: false
+          github-token: ${{ secrets.github_token }}
+          script: |
+            const tag = process.env.GITHUB_REF.split('/').slice(-1)[0]
+            try {
+              await github.rest.repos.createRelease({
+                draft: false,
+                generate_release_notes: true,
+                name: tag,
+                owner: context.repo.owner,
+                prerelease: false,
+                repo: context.repo.repo,
+                tag_name: tag,
+              })
+            }
+            catch (error) {
+              core.setFailed(error.message)
+            }
   notify:
     name: Notify
     needs: [build, test, deploy]
