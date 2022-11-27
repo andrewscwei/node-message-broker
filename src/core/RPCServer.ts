@@ -3,10 +3,7 @@ import { MessagePayload } from '../types'
 import AMQPConnectionManager, { AMQPConnectionManagerReceiveFromDirectExchangeOptions, AMQPConnectionManagerReceiveFromExchangeOptions, AMQPConnectionManagerReceiveFromQueueOptions, AMQPConnectionManagerReceiveFromTopicOptions } from './AMQPConnectionManager'
 
 export default class RPCServer extends AMQPConnectionManager {
-
-  /**
-   * @inheritdoc
-   */
+  /** @inheritdoc */
   async receiveFromQueue(queue: string, handler: (payload: MessagePayload) => Promise<MessagePayload>, {
     ack = true,
     durable = true,
@@ -21,10 +18,8 @@ export default class RPCServer extends AMQPConnectionManager {
     })
   }
 
-  /**
-   * @inheritdoc
-   */
-  async receiveFromExchange(exchange: string, handler: (routingKey: string, payload: MessagePayload) => Promise<MessagePayload | void>, {
+  /** @inheritdoc */
+  async receiveFromExchange(exchange: string, handler: (routingKey: string, payload: MessagePayload) => Promise<MessagePayload> | Promise<void>, {
     ack = true,
     durable = true,
     exchangeType = 'fanout',
@@ -42,10 +37,8 @@ export default class RPCServer extends AMQPConnectionManager {
     })
   }
 
-  /**
-   * @inheritdoc
-   */
-  async receiveFromDirectExchange(exchange: string, key: string, handler: (payload: MessagePayload) => Promise<MessagePayload | void>, {
+  /** @inheritdoc */
+  async receiveFromDirectExchange(exchange: string, key: string, handler: (payload: MessagePayload) => Promise<MessagePayload> | Promise<void>, {
     ack = true,
     durable = true,
     prefetch = 0,
@@ -59,10 +52,8 @@ export default class RPCServer extends AMQPConnectionManager {
     })
   }
 
-  /**
-   * @inheritdoc
-   */
-  async receiveFromTopic(exchange: string, topic: string | string[], handler: (routingKey: string, payload: MessagePayload) => Promise<MessagePayload | void>, {
+  /** @inheritdoc */
+  async receiveFromTopic(exchange: string, topic: string | string[], handler: (routingKey: string, payload: MessagePayload) => Promise<MessagePayload> | Promise<void>, {
     ack = true,
     durable = true,
     prefetch = 0,

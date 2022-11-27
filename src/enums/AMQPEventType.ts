@@ -1,6 +1,7 @@
 enum AMQPEventType {
   /**
-   * A conection to the message queue message-broker server is successfully established.
+   * A conection to the message queue message-broker server is successfully
+   * established.
    */
   CONNECT = 'connect',
 
@@ -15,13 +16,14 @@ enum AMQPEventType {
   BLOCKED = 'blocked',
 
   /**
-   * A blocked connection attempt is unblocked by the message queue message-broker server.
+   * A blocked connection attempt is unblocked by the message queue
+   * message-broker server.
    */
   UNBLOCKED = 'unblocked',
 
   /**
-   * An error has occurred while connecting to or during the connection of the message queue
-   * message-broker server.
+   * An error has occurred while connecting to or during the connection of the
+   * message queue message-broker server.
    */
   ERROR = 'error',
 }

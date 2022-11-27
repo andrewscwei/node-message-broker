@@ -30,25 +30,29 @@ export function typeIsMessagePayload(value: any): value is MessagePayload {
 
   if (dataIdx < 0) return false
   if (keys.length > 1 && errorIdx < 0) return false
-  if ((errorIdx > -1) && !_.isNil(value.error) && !typeIsSuperErrorObject(value.error)) return false
+  if (errorIdx > -1 && !_.isNil(value.error) && !typeIsSuperErrorObject(value.error)) return false
 
   return true
 }
 
 export function typeIsCorrelationID(value: any): value is CorrelationID {
   if (!_.isString(value)) return false
+
   return true
 }
 
 /**
- * An action is a method passed to a consumer for handling the receiving of incoming messages. Use
- * `invokeActionWithPayload` or `invokeActionWithRoutingKeyAndPayload` where appropriate. This
- * action type indicates that it has params. Params must exist in the form of a plain object.
+ * An action is a method passed to a consumer for handling the receiving of
+ * incoming messages. Use `invokeActionWithPayload` or
+ * `invokeActionWithRoutingKeyAndPayload` where appropriate. This action type
+ * indicates that it has params. Params must exist in the form of a plain
+ * object.
  */
-export type ActionWithParams<T extends { [key: string]: any }> = (params: T) => any
+export type ActionWithParams<T extends Record<string, any>> = (params: T) => any
 
 /**
- * An action is a method passed to a consumer for handling the receiving of incoming messages. Use
- * `invokeAction`. This action type indicates that it has no params.
+ * An action is a method passed to a consumer for handling the receiving of
+ * incoming messages. Use `invokeAction`. This action type indicates that it has
+ * no params.
  */
 export type ActionWithoutParams = () => any

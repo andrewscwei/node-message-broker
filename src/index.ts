@@ -5,7 +5,7 @@ import RPCServer from './core/RPCServer'
 
 const debug = useDebug('message-broker')
 
-export interface Configuration extends AMQPConnectionManagerOptions {
+export type Configuration = AMQPConnectionManagerOptions & {
   host: string
 }
 
@@ -51,13 +51,11 @@ export function configureMb(options: Configuration) {
 
 /**
  * Creates a new connection manager instance.
- *
- * @param url - URL of the MQ server to connect to.
- * @param options - @see AMQPConnectionManagerOptions
  */
 export default function factory(): AMQPConnectionManager {
   if (!config) throw new Error('You must call configureMb() before using this method')
   const { host, ...options } = config
+
   return new AMQPConnectionManager(host, options)
 }
 
@@ -68,6 +66,7 @@ export default function factory(): AMQPConnectionManager {
  */
 export function getDefaultPublisher(): AMQPConnectionManager {
   if (!publisher) publisher = factory()
+
   return publisher
 }
 
@@ -78,6 +77,7 @@ export function getDefaultPublisher(): AMQPConnectionManager {
  */
 export function getDefaultConsumer(): AMQPConnectionManager {
   if (!consumer) consumer = factory()
+
   return consumer
 }
 
@@ -90,6 +90,7 @@ export function getDefaultRPCClient(): RPCClient {
   if (!config) throw new Error('You must call configureMb() before using this method')
   const { host, ...options } = config
   if (!rpcClient) rpcClient = new RPCClient(host, options)
+
   return rpcClient
 }
 
@@ -102,6 +103,7 @@ export function getDefaultRPCServer(): RPCServer {
   if (!config) throw new Error('You must call configureMb() before using this method')
   const { host, ...options } = config
   if (!rpcServer) rpcServer = new RPCServer(host, options)
+
   return rpcServer
 }
 
@@ -109,4 +111,3 @@ export * from './enums'
 export * from './types'
 export * from './utils'
 export { AMQPConnectionManager, AMQPConnectionManagerOptions, RPCServer, RPCClient }
-
