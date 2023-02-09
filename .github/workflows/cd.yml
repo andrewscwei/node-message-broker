@@ -4,92 +4,31 @@ on:
     tags: ["v*"]
   release:
     types: [published]
+concurrency:
+  group: deploy
+  cancel-in-progress: true
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version-file: .nvmrc
-      - name: Cache Node modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-build-npm-cache-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-npm-cache-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-      - name: Install NPM dependencies
-        run: npm install
-      - name: Build
-        run: npm run build
-      - name: Persist build dir
-        uses: actions/upload-artifact@v3
-        with:
-          name: build
-          path: build
-  test:
-    name: Test
-    needs: [build]
-    runs-on: ubuntu-latest
-    container: docker/compose:1.22.0
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Test
-        run: docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit
+    uses: andrewscwei/workflows/.github/workflows/node-build.yml@master
+    with:
+      artifacts-path: build/
   deploy:
     name: Deploy
-    needs: [build, test]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version-file: .nvmrc
-          registry-url: https://npm.pkg.github.com
-      - name: Restore build dir
-        uses: actions/download-artifact@v3
-        with:
-          name: build
-      - name: Deploy
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Create release
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.github_token }}
-          script: |
-            const tag = process.env.GITHUB_REF.split('/').slice(-1)[0]
-            try {
-              await github.rest.repos.createRelease({
-                draft: false,
-                generate_release_notes: true,
-                name: tag,
-                owner: context.repo.owner,
-                prerelease: false,
-                repo: context.repo.repo,
-                tag_name: tag,
-              })
-            }
-            catch (error) {
-              core.setFailed(error.message)
-            }
+    needs: [build]
+    uses: andrewscwei/workflows/.github/workflows/npm-deploy.yml@master
+    with:
+      registry: https://npm.pkg.github.com
+      artifacts-name: ${{ needs.build.outputs.artifacts-name }}
+      artifacts-path: ${{ needs.build.outputs.artifacts-path }}
   notify:
     name: Notify
-    needs: [build, test, deploy]
+    needs: [build, deploy]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
-      - uses: andrewscwei/slack-action@v1.0.0
+      - uses: andrewscwei/telegram-action@v1.0.0
         with:
-          success: ${{ needs.build.result == 'success' && needs.test.result == 'success' && needs.deploy.result == 'success' }}
-          webhook-url: ${{ secrets.SLACK_DEVOPS_WEBHOOK_URL }}
+          success: ${{ needs.build.result == 'success' && needs.deploy.result == 'success' }}
+          bot-token: ${{ secrets.TELEGRAM_DEVOPS_BOT_TOKEN }}
+          chat-id: ${{ secrets.TELEGRAM_DEVOPS_CHAT_ID }}
