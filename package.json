@@ -1,6 +1,6 @@
 {
-  "name": "@0xghozt/message-broker",
-  "version": "0.53.0",
+  "name": "@ghoztsys/message-broker",
+  "version": "0.54.0",
   "description": "Node.js message broker that helps managing AMQP connections and sending/receiving messages",
   "main": "build/index.js",
   "type": "module",
@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/0xGHOZT/node-message-broker.git"
+    "url": "git://github.com/ghoztsys/node-message-broker.git"
   },
   "files": [
     "build"
@@ -24,34 +24,34 @@
   "author": "Andrew Wei <andrewscwei@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/0xGHOZT/node-message-broker/issues"
+    "url": "https://github.com/ghoztsys/node-message-broker/issues"
   },
-  "homepage": "https://github.com/0xGHOZT/node-message-broker#readme",
+  "homepage": "https://github.com/ghoztsys/node-message-broker#readme",
   "types": "build/index.d.ts",
   "devDependencies": {
     "@types/debug": "^4.1.7",
-    "@types/lodash": "^4.14.191",
+    "@types/lodash": "^4.14.192",
     "@types/mocha": "^10.0.1",
     "@types/parse-json": "^4.0.0",
-    "@types/uuid": "^9.0.0",
-    "@typescript-eslint/eslint-plugin": "^5.51.0",
-    "@typescript-eslint/parser": "^5.51.0",
-    "concurrently": "^7.6.0",
+    "@types/uuid": "^9.0.1",
+    "@typescript-eslint/eslint-plugin": "^5.58.0",
+    "@typescript-eslint/parser": "^5.58.0",
+    "concurrently": "^8.0.1",
     "cross-env": "^7.0.3",
-    "eslint": "^8.33.0",
+    "eslint": "^8.38.0",
     "mocha": "^10.2.0",
-    "rimraf": "^4.1.2",
+    "rimraf": "^5.0.0",
     "ts-node": "^10.9.1",
-    "typescript": "^4.9.5"
+    "typescript": "^5.0.4"
   },
   "dependencies": {
     "@andrewscwei/super-error": "^2.4.0",
     "@types/amqplib": "^0.10.1",
     "amqplib": "^0.10.3",
-    "bson": "^5.0.0",
+    "bson": "^5.2.0",
     "debug": "^4.3.4",
     "lodash": "^4.17.21",
-    "parse-json": "^6.0.2",
+    "parse-json": "^7.0.0",
     "uuid": "^9.0.0"
   }
 }
