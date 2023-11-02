@@ -1,7 +1,6 @@
 import amqplib, { type Channel, type Connection } from 'amqplib'
 import useDebug from 'debug'
 import { EventEmitter } from 'events'
-import _ from 'lodash'
 import { v4 as uuid } from 'uuid'
 import { AMQPEventType } from '../enums'
 import { typeIsCorrelationID, typeIsMessagePayload, type CorrelationID, type ExchangeType, type MessagePayload } from '../types'
@@ -355,7 +354,7 @@ export class AMQPConnectionManager extends EventEmitter {
    * @returns `true` if connected, `false` otherwise.
    */
   isConnected(): boolean {
-    return !_.isNil(this.connection)
+    return this.connection !== undefined && this.connection !== null
   }
 
   /**
@@ -540,7 +539,7 @@ export class AMQPConnectionManager extends EventEmitter {
 
     const { queue } = await channel.assertQueue('', { exclusive: true })
 
-    if (_.isString(keys)) {
+    if (typeof keys === 'string') {
       await channel.bindQueue(queue, exchange, keys)
     }
     else {

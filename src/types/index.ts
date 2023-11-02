@@ -1,5 +1,5 @@
-import { type SuperErrorObject, typeIsSuperErrorObject } from '@andrewscwei/super-error'
-import _ from 'lodash'
+import { typeIsSuperErrorObject, type SuperErrorObject } from '@andrewscwei/super-error'
+import isPlainObject from 'lodash/isPlainObject'
 
 export type MessagePayload = Readonly<{
   data: any
@@ -18,7 +18,7 @@ export type CorrelationID = string
  * @returns `true` if valid, `false` otherwise.
  */
 export function typeIsMessagePayload(value: any): value is MessagePayload {
-  if (!_.isPlainObject(value)) return false
+  if (!isPlainObject(value)) return false
 
   const keys = Object.keys(value)
 
@@ -30,13 +30,13 @@ export function typeIsMessagePayload(value: any): value is MessagePayload {
 
   if (dataIdx < 0) return false
   if (keys.length > 1 && errorIdx < 0) return false
-  if (errorIdx > -1 && !_.isNil(value.error) && !typeIsSuperErrorObject(value.error)) return false
+  if (errorIdx > -1 && value.error !== undefined && value.error !== null && !typeIsSuperErrorObject(value.error)) return false
 
   return true
 }
 
 export function typeIsCorrelationID(value: any): value is CorrelationID {
-  if (!_.isString(value)) return false
+  if (typeof value !== 'string') return false
 
   return true
 }

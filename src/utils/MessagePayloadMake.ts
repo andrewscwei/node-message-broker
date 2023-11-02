@@ -1,14 +1,13 @@
 import SuperError from '@andrewscwei/super-error'
-import _ from 'lodash'
 import { type MessagePayload } from '../types'
 
 export function MessagePayloadMake(value?: any): MessagePayload {
-  if (_.isNil(value)) {
+  if (value === undefined || value === null) {
     return {
       data: null,
     }
   }
-  else if (_.isError(value)) {
+  else if (value instanceof Error) {
     return {
       data: null,
       error: SuperError.serialize(value),
