@@ -1,4 +1,4 @@
-import SuperError from '@andrewscwei/super-error'
+import { SuperError } from '@andrewscwei/super-error'
 import { type ActionWithParams, type MessagePayload } from '../types'
 import { MessagePayloadMake } from '../utils'
 

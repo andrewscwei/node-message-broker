@@ -1,4 +1,4 @@
-import SuperError from '@andrewscwei/super-error'
+import { SuperError } from '@andrewscwei/super-error'
 import { type MessagePayload } from '../types'
 
 export function MessagePayloadMake(value?: any): MessagePayload {
