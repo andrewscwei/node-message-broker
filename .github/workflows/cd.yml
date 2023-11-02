@@ -13,7 +13,7 @@ jobs:
     uses: andrewscwei/workflows/.github/workflows/node-build.yml@master
     with:
       artifacts-path: build/
-      service-image: rabbitmq:3.9.25-management
+      service-image: rabbitmq:3.12.7-management
       service-port: 5672:5672
   deploy:
     name: Deploy
