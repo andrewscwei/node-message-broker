@@ -1,8 +1,8 @@
 import SuperError from '@andrewscwei/super-error'
 import _ from 'lodash'
-import { MessagePayload } from '../types'
+import { type MessagePayload } from '../types'
 
-export default function MessagePayloadMake(value?: any): MessagePayload {
+export function MessagePayloadMake(value?: any): MessagePayload {
   if (_.isNil(value)) {
     return {
       data: null,

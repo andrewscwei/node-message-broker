@@ -1,6 +1,6 @@
 {
   "name": "@ghoztsys/message-broker",
-  "version": "0.54.0",
+  "version": "0.55.0",
   "description": "Node.js message broker that helps managing AMQP connections and sending/receiving messages",
   "main": "build/index.js",
   "type": "module",
@@ -8,8 +8,9 @@
     "clean": "rimraf build",
     "prebuild": "npm run lint",
     "build": "npm run clean && tsc",
-    "test": "npm run build -- --project tsconfig.test.json && mocha -n experimental-specifier-resolution=node --timeout 30000 -b -c --extension spec.js --recursive --exit \"build/$npm_config_files\"",
-    "test:ts": "concurrently --kill-others -n mq,module --hide mq -c white,cyan \"docker run --rm -p 5672:5672 rabbitmq:3.9.25\" \"cross-env DEBUG=message-broker* mocha -n experimental-specifier-resolution=node -n loader=ts-node/esm -r ts-node/register --timeout 30000 -b -c --extension spec.ts --recursive --exit \"src/$npm_config_files\"\"",
+    "test": "mocha --config .mocharc \"tests/$npm_config_files\"",
+    "test:unit": "concurrently --kill-others -n mq,module --hide mq -c white,cyan \"docker run --rm -p 5672:5672 rabbitmq:3.9.25\" \"cross-env DEBUG=message-broker* mocha --config .mocharc \"src/$npm_config_files\"\"",
+    "svc": "docker run --rm -p 5672:5672 rabbitmq:3.9.25",
     "lint": "eslint --ext .ts src",
     "lint:fix": "npm run lint -- --fix",
     "ship:test": "docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit"

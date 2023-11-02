@@ -1,11 +1,11 @@
-import amqplib, { Channel, Connection } from 'amqplib'
+import amqplib, { type Channel, type Connection } from 'amqplib'
 import useDebug from 'debug'
 import { EventEmitter } from 'events'
 import _ from 'lodash'
-import { v1 as uuid } from 'uuid'
+import { v4 as uuid } from 'uuid'
 import { AMQPEventType } from '../enums'
-import { CorrelationID, ExchangeType, MessagePayload, typeIsCorrelationID, typeIsMessagePayload } from '../types'
-import { createCorrelationId, decodePayload, encodePayload, MessagePayloadMake } from '../utils'
+import { typeIsCorrelationID, typeIsMessagePayload, type CorrelationID, type ExchangeType, type MessagePayload } from '../types'
+import { MessagePayloadMake, createCorrelationId, decodePayload, encodePayload } from '../utils'
 
 const debug = useDebug('message-broker')
 
@@ -313,7 +313,7 @@ export type AMQPConnectionManagerReceiveFromDirectExchangeOptions = {
   autoCloseChannel?: boolean
 }
 
-export default class AMQPConnectionManager extends EventEmitter {
+export class AMQPConnectionManager extends EventEmitter {
   readonly channels: Channel[] = []
 
   protected connection?: Connection
@@ -329,8 +329,8 @@ export default class AMQPConnectionManager extends EventEmitter {
   /**
    * Creates a new AMQPConnectionManager instance.
    *
-   * @param url - URL of the message queue server.
-   * @param options - See {@link AMQPConnectionManagerOptions}.
+   * @param url URL of the message queue server.
+   * @param options See {@link AMQPConnectionManagerOptions}.
    *
    * @returns A new AMQPConnectionManager instance.
    */
@@ -425,9 +425,9 @@ export default class AMQPConnectionManager extends EventEmitter {
   /**
    * Sends a message to an exchange.
    *
-   * @param exchange - Name of the exchange.
-   * @param payload - Message payload.
-   * @param options - See {@link AMQPConnectionManagerSendToExchangeOptions}.
+   * @param exchange Name of the exchange.
+   * @param payload Message payload.
+   * @param options See {@link AMQPConnectionManagerSendToExchangeOptions}.
    *
    * @returns The correlation ID if this method does not expect a reply from the
    *          consumer. Otherwise it returns the reply from the consumer.
@@ -517,10 +517,9 @@ export default class AMQPConnectionManager extends EventEmitter {
    * queue is provided, the error is serialized into an object and sent back to
    * the publisher. Otherwise the error is thrown.
    *
-   * @param exchange - Name of the exchange.
-   * @param handler - Handler invoked when the message is received.
-   * @param options - See
-   *                  {@link AMQPConnectionManagerReceiveFromExchangeOptions}.
+   * @param exchange Name of the exchange.
+   * @param handler Handler invoked when the message is received.
+   * @param options See {@link AMQPConnectionManagerReceiveFromExchangeOptions}.
    *
    * @returns The channel created.
    *
@@ -618,9 +617,9 @@ export default class AMQPConnectionManager extends EventEmitter {
   /**
    * Sends a message directly to a queue.
    *
-   * @param queue - Name of the queue.
-   * @param payload - Message payload.
-   * @param options - See {@link AMQPConnectionManagerSendToQueueOptions}.
+   * @param queue Name of the queue.
+   * @param payload Message payload.
+   * @param options See {@link AMQPConnectionManagerSendToQueueOptions}.
    *
    * @returns A message payload from the consumer if this operation expects a
    *          reply, the correlation ID otherwise.
@@ -693,9 +692,9 @@ export default class AMQPConnectionManager extends EventEmitter {
    * queue is provided, the error is serialized into an object and sent back to
    * the publisher. Otherwise the error is thrown.
    *
-   * @param queue - Name of the queue.
-   * @param handler - Handler invoked when the message is received.
-   * @param options - See {@link AMQPConnectionManagerReceiveFromQueueOptions}.
+   * @param queue Name of the queue.
+   * @param handler Handler invoked when the message is received.
+   * @param options See {@link AMQPConnectionManagerReceiveFromQueueOptions}.
    *
    * @returns The created channel.
    *
@@ -783,9 +782,9 @@ export default class AMQPConnectionManager extends EventEmitter {
   /**
    * Broadcasts a message to an exchange.
    *
-   * @param exchange - Name of the exchange.
-   * @param payload - Message payload.
-   * @param options - See {@link AMQPConnectionManagerBroadcastOptions}.
+   * @param exchange Name of the exchange.
+   * @param payload Message payload.
+   * @param options See {@link AMQPConnectionManagerBroadcastOptions}.
    *
    * @returns The correlation ID.
    *
@@ -811,9 +810,9 @@ export default class AMQPConnectionManager extends EventEmitter {
   /**
    * Listens for a message broadcast.
    *
-   * @param exchange - Name of the exchange.
-   * @param handler - Handler invoked when the message is received.
-   * @param options - See {@link AMQPConnectionManagerListenOptions}.
+   * @param exchange Name of the exchange.
+   * @param handler Handler invoked when the message is received.
+   * @param options See {@link AMQPConnectionManagerListenOptions}.
    *
    * @returns The created channel.
    */
@@ -836,11 +835,10 @@ export default class AMQPConnectionManager extends EventEmitter {
   /**
    * Sends a message to a direct exchange.
    *
-   * @param exchange - Name of the exchange.
-   * @param key - Routing key of the direct exchange.
-   * @param payload - Message payload.
-   * @param options - See
-   *                  {@link AMQPConnectionManagerSendToDirectExchangeOptions}.
+   * @param exchange Name of the exchange.
+   * @param key Routing key of the direct exchange.
+   * @param payload Message payload.
+   * @param options See {@link AMQPConnectionManagerSendToDirectExchangeOptions}.
    *
    * @returns The correlation ID.
    */
@@ -865,11 +863,10 @@ export default class AMQPConnectionManager extends EventEmitter {
   /**
    * Listens for a message to arrive for a direct exchange.
    *
-   * @param exchange - Name of the exchange.
-   * @param key - Routing key of the direct exchange.
-   * @param handler - Handler invoked when the message is received.
-   * @param options - See
-   *                  {@link AMQPConnectionManagerReceiveFromDirectExchangeOptions}.
+   * @param exchange Name of the exchange.
+   * @param key Routing key of the direct exchange.
+   * @param handler Handler invoked when the message is received.
+   * @param options See {@link AMQPConnectionManagerReceiveFromDirectExchangeOptions}.
    *
    * @returns The created channel.
    */
@@ -892,10 +889,10 @@ export default class AMQPConnectionManager extends EventEmitter {
   /**
    * Sends a message to a topic.
    *
-   * @param exchange - Name of the exchange.
-   * @param topic - Routing key of the topic.
-   * @param payload - Message payload.
-   * @param options - See {@link AMQPConnectionManagerSendToTopicOptions}.
+   * @param exchange Name of the exchange.
+   * @param topic Routing key of the topic.
+   * @param payload Message payload.
+   * @param options See {@link AMQPConnectionManagerSendToTopicOptions}.
    *
    * @returns The correlation ID.
    */
@@ -920,10 +917,10 @@ export default class AMQPConnectionManager extends EventEmitter {
   /**
    * Listens for a message to arrive for a topic.
    *
-   * @param exchange - Name of the exchange.
-   * @param topic - Routing key(s) of the topic.
-   * @param handler - Handler invoked when the message is received.
-   * @param options - See {@link AMQPConnectionManagerReceiveFromTopicOptions}.
+   * @param exchange Name of the exchange.
+   * @param topic Routing key(s) of the topic.
+   * @param handler Handler invoked when the message is received.
+   * @param options See {@link AMQPConnectionManagerReceiveFromTopicOptions}.
    *
    * @returns The created channel.
    */
@@ -1004,7 +1001,7 @@ export default class AMQPConnectionManager extends EventEmitter {
   /**
    * Handler invoked when the connection is blocked.
    *
-   * @param reason - The reason why the connection is blocked.
+   * @param reason The reason why the connection is blocked.
    */
   private onConnectionBlocked = (reason: string) => {
     debug(`MQ server blocked the connection because: ${reason}`)
@@ -1024,7 +1021,7 @@ export default class AMQPConnectionManager extends EventEmitter {
   /**
    * Handler invoked when there is a connection error.
    *
-   * @param error - The error.
+   * @param error The error.
    */
   private onConnectionError = (error: Error) => {
     debug(`An error occured in the MQ connection: ${error}`)
@@ -1037,7 +1034,7 @@ export default class AMQPConnectionManager extends EventEmitter {
   /**
    * Handler invoked when the connection is closed.
    *
-   * @param error - The error.
+   * @param error The error.
    */
   private onConnectionClose = (error: Error) => {
     debug(`MQ connection closed: ${error}`)

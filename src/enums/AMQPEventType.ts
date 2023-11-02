@@ -1,4 +1,4 @@
-enum AMQPEventType {
+export enum AMQPEventType {
   /**
    * A conection to the message queue message-broker server is successfully
    * established.
@@ -27,5 +27,3 @@ enum AMQPEventType {
    */
   ERROR = 'error',
 }
-
-export default AMQPEventType

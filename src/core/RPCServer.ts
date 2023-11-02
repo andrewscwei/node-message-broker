@@ -1,8 +1,8 @@
-import { Channel } from 'amqplib'
-import { MessagePayload } from '../types'
-import AMQPConnectionManager, { AMQPConnectionManagerReceiveFromDirectExchangeOptions, AMQPConnectionManagerReceiveFromExchangeOptions, AMQPConnectionManagerReceiveFromQueueOptions, AMQPConnectionManagerReceiveFromTopicOptions } from './AMQPConnectionManager'
+import { type Channel } from 'amqplib'
+import { type MessagePayload } from '../types'
+import { AMQPConnectionManager, type AMQPConnectionManagerReceiveFromDirectExchangeOptions, type AMQPConnectionManagerReceiveFromExchangeOptions, type AMQPConnectionManagerReceiveFromQueueOptions, type AMQPConnectionManagerReceiveFromTopicOptions } from './AMQPConnectionManager'
 
-export default class RPCServer extends AMQPConnectionManager {
+export class RPCServer extends AMQPConnectionManager {
   /** @inheritdoc */
   async receiveFromQueue(queue: string, handler: (payload: MessagePayload) => Promise<MessagePayload>, {
     ack = true,

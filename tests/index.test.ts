@@ -1,11 +1,6 @@
 import assert from 'assert'
 import { describe, it } from 'mocha'
-import AMQPConnectionManager from './core/AMQPConnectionManager'
-import RPCClient from './core/RPCClient'
-import RPCServer from './core/RPCServer'
-import { AMQPEventType } from './enums'
-import { MessagePayload } from './types'
-import { MessagePayloadMake } from './utils'
+import { RPCServer, RPCClient, AMQPConnectionManager, AMQPEventType, MessagePayloadMake, type MessagePayload } from '../build'
 
 describe('message-broker', () => {
   it('can create a new AMQPConnectionManager instance that auto connects to a MQ server', async () => {

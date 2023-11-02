@@ -1,7 +1,7 @@
 import useDebug from 'debug'
-import AMQPConnectionManager, { AMQPConnectionManagerOptions } from './core/AMQPConnectionManager'
-import RPCClient from './core/RPCClient'
-import RPCServer from './core/RPCServer'
+import { AMQPConnectionManager, AMQPConnectionManagerOptions } from './core/AMQPConnectionManager'
+import { RPCClient } from './core/RPCClient'
+import { RPCServer } from './core/RPCServer'
 
 const debug = useDebug('message-broker')
 
@@ -52,7 +52,7 @@ export function configureMb(options: Configuration) {
 /**
  * Creates a new connection manager instance.
  */
-export default function factory(): AMQPConnectionManager {
+export function factory(): AMQPConnectionManager {
   if (!config) throw new Error('You must call configureMb() before using this method')
   const { host, ...options } = config
 
@@ -110,4 +110,4 @@ export function getDefaultRPCServer(): RPCServer {
 export * from './enums'
 export * from './types'
 export * from './utils'
-export { AMQPConnectionManager, AMQPConnectionManagerOptions, RPCServer, RPCClient }
+export { AMQPConnectionManager, AMQPConnectionManagerOptions, RPCClient, RPCServer }

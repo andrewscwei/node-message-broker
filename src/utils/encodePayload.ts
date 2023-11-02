@@ -1,5 +1,5 @@
-import { MessagePayload } from '../types'
+import { type MessagePayload } from '../types'
 
-export default function encodePayload(payload: MessagePayload): Buffer {
+export function encodePayload(payload: MessagePayload): Buffer {
   return Buffer.from(JSON.stringify(payload))
 }

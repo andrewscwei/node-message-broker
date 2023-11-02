@@ -1,4 +1,4 @@
-import { SuperErrorObject, typeIsSuperErrorObject } from '@andrewscwei/super-error'
+import { type SuperErrorObject, typeIsSuperErrorObject } from '@andrewscwei/super-error'
 import _ from 'lodash'
 
 export type MessagePayload = Readonly<{
