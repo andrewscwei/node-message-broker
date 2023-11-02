@@ -1,6 +1,6 @@
-import { type MessagePayload, typeIsMessagePayload } from '../types'
-import { createCorrelationId, MessagePayloadMake } from '../utils'
-import { AMQPConnectionManager, type AMQPConnectionManagerSendToDirectExchangeOptions, type AMQPConnectionManagerSendToExchangeOptions, type AMQPConnectionManagerSendToQueueOptions, type AMQPConnectionManagerSendToTopicOptions } from './AMQPConnectionManager'
+import { typeIsMessagePayload, type MessagePayload } from '../types/index.js'
+import { MessagePayloadMake, createCorrelationId } from '../utils/index.js'
+import { AMQPConnectionManager, type AMQPConnectionManagerSendToDirectExchangeOptions, type AMQPConnectionManagerSendToExchangeOptions, type AMQPConnectionManagerSendToQueueOptions, type AMQPConnectionManagerSendToTopicOptions } from './AMQPConnectionManager.js'
 
 export class RPCClient extends AMQPConnectionManager {
   /**

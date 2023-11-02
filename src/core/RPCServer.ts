@@ -1,6 +1,6 @@
 import { type Channel } from 'amqplib'
-import { type MessagePayload } from '../types'
-import { AMQPConnectionManager, type AMQPConnectionManagerReceiveFromDirectExchangeOptions, type AMQPConnectionManagerReceiveFromExchangeOptions, type AMQPConnectionManagerReceiveFromQueueOptions, type AMQPConnectionManagerReceiveFromTopicOptions } from './AMQPConnectionManager'
+import { type MessagePayload } from '../types/index.js'
+import { AMQPConnectionManager, type AMQPConnectionManagerReceiveFromDirectExchangeOptions, type AMQPConnectionManagerReceiveFromExchangeOptions, type AMQPConnectionManagerReceiveFromQueueOptions, type AMQPConnectionManagerReceiveFromTopicOptions } from './AMQPConnectionManager.js'
 
 export class RPCServer extends AMQPConnectionManager {
   /** @inheritdoc */

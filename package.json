@@ -1,6 +1,6 @@
 {
   "name": "@ghoztsys/message-broker",
-  "version": "0.55.0",
+  "version": "0.56.0",
   "description": "Node.js message broker that helps managing AMQP connections and sending/receiving messages",
   "main": "build/index.js",
   "type": "module",
@@ -52,7 +52,7 @@
     "bson": "^6.2.0",
     "debug": "^4.3.4",
     "lodash": "^4.17.21",
-    "parse-json": "^7.1.1",
+    "parse-json": "^8.0.0",
     "uuid": "^9.0.1"
   }
 }

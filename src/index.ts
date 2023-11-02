@@ -1,7 +1,5 @@
 import useDebug from 'debug'
-import { AMQPConnectionManager, AMQPConnectionManagerOptions } from './core/AMQPConnectionManager'
-import { RPCClient } from './core/RPCClient'
-import { RPCServer } from './core/RPCServer'
+import { AMQPConnectionManager, RPCClient, RPCServer, type AMQPConnectionManagerOptions } from './core/index.js'
 
 const debug = useDebug('message-broker')
 
@@ -107,7 +105,7 @@ export function getDefaultRPCServer(): RPCServer {
   return rpcServer
 }
 
-export * from './enums'
-export * from './types'
-export * from './utils'
-export { AMQPConnectionManager, AMQPConnectionManagerOptions, RPCClient, RPCServer }
+export * from './core/index.js'
+export * from './enums/index.js'
+export * from './types/index.js'
+export * from './utils/index.js'

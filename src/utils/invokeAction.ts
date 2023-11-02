@@ -1,6 +1,7 @@
 import { SuperError } from '@andrewscwei/super-error'
-import { type ActionWithoutParams, type MessagePayload } from '../types'
-import { MessagePayloadMake } from '../utils'
+import { type ActionWithoutParams } from '../types/Action.js'
+import { type MessagePayload } from '../types/MessagePayload.js'
+import { MessagePayloadMake } from './MessagePayloadMake.js'
 
 /**
  * Maps an action to a function that can be used by consumers to handle incoming

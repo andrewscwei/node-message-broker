@@ -2,9 +2,9 @@ import amqplib, { type Channel, type Connection } from 'amqplib'
 import useDebug from 'debug'
 import { EventEmitter } from 'events'
 import { v4 as uuid } from 'uuid'
-import { AMQPEventType } from '../enums'
-import { typeIsCorrelationID, typeIsMessagePayload, type CorrelationID, type ExchangeType, type MessagePayload } from '../types'
-import { MessagePayloadMake, createCorrelationId, decodePayload, encodePayload } from '../utils'
+import { AMQPEventType } from '../enums/index.js'
+import { typeIsCorrelationID, typeIsMessagePayload, type CorrelationID, type ExchangeType, type MessagePayload } from '../types/index.js'
+import { MessagePayloadMake, createCorrelationId, decodePayload, encodePayload } from '../utils/index.js'
 
 const debug = useDebug('message-broker')
 

@@ -30,6 +30,7 @@
   ],
   "exclude": [
     "**/*.spec.ts",
+    "**/*.test.ts",
     "node_modules",
     "build",
     "tests"

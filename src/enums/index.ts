@@ -1,1 +1,1 @@
-export * from './AMQPEventType'
+export * from './AMQPEventType.js'
