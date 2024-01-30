@@ -1,19 +1,17 @@
 {
   "name": "@ghoztsys/message-broker",
-  "version": "0.56.0",
+  "version": "0.57.0",
   "description": "Node.js message broker that helps managing AMQP connections and sending/receiving messages",
   "main": "build/index.js",
   "type": "module",
   "scripts": {
     "clean": "rimraf build",
-    "prebuild": "npm run lint",
-    "build": "npm run clean && tsc",
+    "prebuild": "npm run lint && npm run clean",
+    "build": "tsc",
     "test": "mocha --config .mocharc \"tests/$npm_config_files\"",
-    "test:unit": "concurrently --kill-others -n mq,module --hide mq -c white,cyan \"docker run --rm -p 5672:5672 rabbitmq:3.12.7\" \"cross-env DEBUG=message-broker* mocha --config .mocharc \"src/$npm_config_files\"\"",
     "svc": "docker run --rm -p 5672:5672 rabbitmq:3.12.7",
     "lint": "eslint --ext .ts src",
-    "lint:fix": "npm run lint -- --fix",
-    "ship:test": "docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit"
+    "lint:fix": "npm run lint -- --fix"
   },
   "repository": {
     "type": "git",
@@ -30,29 +28,27 @@
   "homepage": "https://github.com/ghoztsys/node-message-broker#readme",
   "types": "build/index.d.ts",
   "devDependencies": {
-    "@types/debug": "^4.1.10",
-    "@types/lodash": "^4.14.200",
-    "@types/mocha": "^10.0.3",
-    "@types/parse-json": "^4.0.1",
-    "@types/uuid": "^9.0.6",
-    "@typescript-eslint/eslint-plugin": "^6.9.1",
-    "@typescript-eslint/parser": "^6.9.1",
-    "concurrently": "^8.2.2",
-    "cross-env": "^7.0.3",
-    "eslint": "^8.52.0",
+    "@types/amqplib": "^0.10.4",
+    "@types/debug": "^4.1.12",
+    "@types/lodash": "^4.14.202",
+    "@types/mocha": "^10.0.6",
+    "@types/parse-json": "^4.0.2",
+    "@types/uuid": "^9.0.8",
+    "@typescript-eslint/eslint-plugin": "^6.20.0",
+    "@typescript-eslint/parser": "^6.20.0",
+    "eslint": "^8.56.0",
     "mocha": "^10.2.0",
     "rimraf": "^5.0.5",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.2.2"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
   },
   "dependencies": {
     "@andrewscwei/super-error": "^3.0.0",
-    "@types/amqplib": "^0.10.3",
     "amqplib": "^0.10.3",
     "bson": "^6.2.0",
     "debug": "^4.3.4",
     "lodash": "^4.17.21",
-    "parse-json": "^8.0.0",
+    "parse-json": "^8.1.0",
     "uuid": "^9.0.1"
   }
 }
