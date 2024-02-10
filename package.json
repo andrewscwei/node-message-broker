@@ -1,5 +1,5 @@
 {
-  "name": "@ghoztsys/message-broker",
+  "name": "@andrewscwei/message-broker",
   "version": "0.57.0",
   "description": "Node.js message broker that helps managing AMQP connections and sending/receiving messages",
   "main": "build/index.js",
@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/ghoztsys/node-message-broker.git"
+    "url": "git://github.com/andrewscwei/node-message-broker.git"
   },
   "files": [
     "build"
@@ -23,9 +23,9 @@
   "author": "Andrew Wei <andrewscwei@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ghoztsys/node-message-broker/issues"
+    "url": "https://github.com/andrewscwei/node-message-broker/issues"
   },
-  "homepage": "https://github.com/ghoztsys/node-message-broker#readme",
+  "homepage": "https://github.com/andrewscwei/node-message-broker#readme",
   "types": "build/index.d.ts",
   "devDependencies": {
     "@types/amqplib": "^0.10.4",

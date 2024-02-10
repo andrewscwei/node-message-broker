@@ -8,8 +8,9 @@ jobs:
     name: Build
     uses: andrewscwei/workflows/.github/workflows/node-build.yml@v1
     with:
-      service-image: rabbitmq:3.12.7-management
+      service-image: rabbitmq:3.12.7
       service-port: 5672:5672
+      test-command: npm test
   notify:
     name: Notify
     needs: [build]

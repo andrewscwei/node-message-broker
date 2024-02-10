@@ -13,7 +13,7 @@ jobs:
     uses: andrewscwei/workflows/.github/workflows/node-build.yml@v1
     with:
       artifacts-path: build/
-      service-image: rabbitmq:3.12.7-management
+      service-image: rabbitmq:3.12.7
       service-port: 5672:5672
   deploy:
     name: Deploy
@@ -21,9 +21,10 @@ jobs:
     uses: andrewscwei/workflows/.github/workflows/npm-deploy.yml@v1
     with:
       create-release: true
-      registry: https://npm.pkg.github.com
       artifacts-name: ${{ needs.build.outputs.artifacts-name }}
       artifacts-path: ${{ needs.build.outputs.artifacts-path }}
+    secrets:
+      npm-auth-token: ${{ secrets.NPM_AUTH }}
   notify:
     name: Notify
     needs: [build, deploy]
