@@ -7,11 +7,18 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    services:
+      service:
+        image: rabbitmq:3.12.7
+        ports:
+          - 5672:5672
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Build
         uses: andrewscwei/actions/node-build@v1
+        with:
+          postbuild-command: npm test
   notify:
     name: Notify
     needs: [build]
