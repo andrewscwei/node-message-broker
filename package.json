@@ -11,7 +11,7 @@
     "test": "mocha --config .mocharc \"tests/$npm_config_files\"",
     "svc": "docker run --rm -p 5672:5672 rabbitmq:3.12.7",
     "lint": "eslint",
-    "lint:fix": "npm run lint -- --fix"
+    "lint:fix": "eslint --fix"
   },
   "repository": {
     "type": "git",
@@ -28,31 +28,31 @@
   "homepage": "https://github.com/andrewscwei/node-message-broker#readme",
   "types": "build/index.d.ts",
   "devDependencies": {
-    "@eslint/js": "^9.4.0",
+    "@eslint/js": "^9.9.1",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
-    "@stylistic/eslint-plugin": "^2.1.0",
+    "@stylistic/eslint-plugin": "^2.7.2",
     "@types/amqplib": "^0.10.5",
     "@types/debug": "^4.1.12",
-    "@types/lodash": "^4.17.4",
-    "@types/mocha": "^10.0.6",
+    "@types/lodash": "^4.17.7",
+    "@types/mocha": "^10.0.7",
     "@types/parse-json": "^4.0.2",
-    "@types/uuid": "^9.0.8",
-    "eslint": "^9.4.0",
-    "mocha": "^10.4.0",
-    "rimraf": "^5.0.7",
-    "semantic-release": "^24.0.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.4.5",
-    "typescript-eslint": "^8.0.0-alpha.10"
+    "@types/uuid": "^10.0.0",
+    "eslint": "^9.9.1",
+    "mocha": "^10.7.3",
+    "rimraf": "^6.0.1",
+    "semantic-release": "^24.1.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4",
+    "typescript-eslint": "^8.4.0"
   },
   "dependencies": {
-    "@andrewscwei/super-error": "^3.1.0",
+    "@andrewscwei/super-error": "^3.2.0",
     "amqplib": "^0.10.4",
-    "bson": "^6.7.0",
-    "debug": "^4.3.5",
+    "bson": "^6.8.0",
+    "debug": "^4.3.6",
     "lodash": "^4.17.21",
     "parse-json": "^8.1.0",
-    "uuid": "^9.0.1"
+    "uuid": "^10.0.0"
   }
 }
